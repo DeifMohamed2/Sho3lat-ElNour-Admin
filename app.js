@@ -1,3 +1,9 @@
+// Fix for buffer-equal-constant-time compatibility issue
+// Ensure Buffer is available globally before any modules load
+if (typeof global.Buffer === 'undefined') {
+  global.Buffer = require('buffer').Buffer;
+}
+
 require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
