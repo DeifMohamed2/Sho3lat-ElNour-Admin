@@ -295,24 +295,35 @@ async function handleEmployee(employee, scanTime, today, isAfter3PM, deviceSN, v
 
   if (!record) {
     // Create new attendance record (first scan of the day)
+    // If scanning after 3PM without prior check-in, treat as late check-in
+    // Always set checkInTime for new records to ensure they appear in queries
     const initialStatus = isLate ? 'Late' : 'Present';
     
     record = await EmployeeAttendance.create({
       employee: employee._id,
       date: today,
-      checkInTime: isAfter3PM ? null : scanTime, // Only set if it's a check-in
-      checkOutTime: isAfter3PM ? scanTime : null, // Only set if it's a check-out (edge case)
+      checkInTime: scanTime, // Always set checkInTime for new records
+      checkOutTime: isAfter3PM ? scanTime : null, // If after 3PM, also set as check-out (same time)
       status: initialStatus,
       scans: [{
         scanTime: scanTime,
-        scanType: scanType,
+        scanType: isAfter3PM ? 'Check Out' : 'Check In',
         verifyMethod: verifyMethod,
         deviceSN: deviceSN,
       }],
       deviceSN,
       isAutomated: true,
     });
-    console.log(`✅ Employee ${scanType.toLowerCase()}: ${employee.employeeName}${isLate ? ' (Late)' : ' (Present)'}`);
+    
+    // Calculate totalHours if both times are set (should be 0 if same time)
+    if (record.checkInTime && record.checkOutTime) {
+      const diffMs = record.checkOutTime.getTime() - record.checkInTime.getTime();
+      record.totalHours = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
+      if (record.totalHours < 0) record.totalHours = 0;
+      await record.save();
+    }
+    
+    console.log(`✅ Employee ${isAfter3PM ? 'check-out (no prior check-in)' : 'check-in'}: ${employee.employeeName}${isLate ? ' (Late)' : ' (Present)'}`);
   } else {
     // Update existing record - add scan to scans array
     record.scans.push({

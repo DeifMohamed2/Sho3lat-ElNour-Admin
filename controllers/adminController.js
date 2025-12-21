@@ -3519,17 +3519,16 @@ const employeeAttendanceDashboard_Get = async (req, res) => {
     const search = req.query.search;
     const tab = req.query.tab; // 'present', 'absent', 'departed'
 
+    // Use Egypt timezone for date boundaries to match webhook storage
+    const { getEgyptDayBoundaries } = require('../utils/timezone');
     const selectedDate = new Date(date);
-    selectedDate.setHours(0, 0, 0, 0);
+    const { start: dayStart, end: dayEnd } = getEgyptDayBoundaries(selectedDate);
 
-    const nextDay = new Date(selectedDate);
-    nextDay.setDate(nextDay.getDate() + 1);
-
-    // Build query
+    // Build query using Egypt timezone boundaries
     const query = {
       date: {
-        $gte: selectedDate,
-        $lt: nextDay,
+        $gte: dayStart,
+        $lte: dayEnd,
       },
     };
 
@@ -3544,6 +3543,7 @@ const employeeAttendanceDashboard_Get = async (req, res) => {
 
     // Apply tab filter
     if (tab === 'present') {
+      // Show records with checkInTime (Present or Late status)
       query.$or = [
         { status: 'Present', checkInTime: { $exists: true, $ne: null } },
         { status: 'Late', checkInTime: { $exists: true, $ne: null } }
@@ -3554,7 +3554,10 @@ const employeeAttendanceDashboard_Get = async (req, res) => {
         { status: 'On-Leave' }
       ];
     } else if (tab === 'departed') {
+      // Show records with checkOutTime (regardless of checkInTime)
       query.checkOutTime = { $exists: true, $ne: null };
+      // Remove status filter for departed tab to show all departed employees
+      delete query.status;
     }
 
     // Get all employee attendance for the selected date
