@@ -1,23 +1,20 @@
+// routes/webhookRoute.js
+
 const express = require('express');
 const router = express.Router();
-const webhookController = require('../controllers/webhookController');
+const {
+  handleZKTecoAttendance,
+  handleZKTecoPing,
+  handleZKTecoRegistry,
+} = require('../controllers/webhookController');
 
-// ZKTeco Device Push Protocol Endpoints
-// These endpoints receive data automatically from ZKTeco devices via ADMS/Push Protocol
+// Attendance push
+router.all('/iclock/cdata', handleZKTecoAttendance);
 
-// Main endpoint for attendance data (ZKTeco standard: /iclock/cdata)
-// ZKTeco devices automatically send POST/GET requests here when someone scans
-router.all('/iclock/cdata', webhookController.handleZKTecoAttendance);
+// Device polling
+router.get('/iclock/getrequest', handleZKTecoPing);
 
-// Alternative endpoint (some devices use this)
-router.all('/zkteco/cdata', webhookController.handleZKTecoAttendance);
-
-// Device ping/health check endpoint
-router.get('/iclock/getrequest', webhookController.handleZKTecoPing);
-router.get('/zkteco/ping', webhookController.handleZKTecoPing);
-
-// Device registry endpoint
-router.all('/iclock/registry', webhookController.handleZKTecoRegistry);
+// Registry / sync
+router.all('/iclock/registry', handleZKTecoRegistry);
 
 module.exports = router;
-

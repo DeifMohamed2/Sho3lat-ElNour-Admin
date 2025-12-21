@@ -1,5 +1,5 @@
-// Fix for buffer-equal-constant-time compatibility issue
-// Ensure Buffer is available globally before any modules load
+// app.js
+
 if (typeof global.Buffer === 'undefined') {
   global.Buffer = require('buffer').Buffer;
 }
@@ -19,66 +19,64 @@ const adminRoute = require('./routes/adminRoute');
 const parentRoute = require('./routes/parentRoute');
 const webhookRoute = require('./routes/webhookRoute');
 
-// express app
 const app = express();
 
-// CONECT to mongodb
-// let io
-// const dbURI = 'mongodb://localhost:27017/ElkablyCenter';
+/* =======================
+   DATABASE
+======================= */
+const dbURI =
+  process.env.DATABASE_URL || 'mongodb://localhost:27017/sho3latElnour';
 
-const dbURI = process.env.DATABASE_URL || 'mongodb://localhost:27017/sho3latElnour';
 mongoose
-  .connect(dbURI, {
-    maxPoolSize: 10, // limit number of connections
+  .connect(dbURI, { maxPoolSize: 10 })
+  .then(() => {
+    app.listen(8319, () => {
+      console.log('✅ Server running on http://localhost:8319');
+    });
   })
-  .then((result) => {
-    app.listen(8319);
+  .catch(console.error);
 
-    console.log('connected to db and listening on port http://localhost:8319 ');
-  })
-  .catch((err) => {
-    console.log(err);
-  });
-
-// register view engine
+/* =======================
+   VIEW ENGINE
+======================= */
 app.set('view engine', 'ejs');
-// listen for requests
+
+/* =======================
+   MIDDLEWARE (ORDER IS CRITICAL)
+======================= */
+
+// ZKTeco sends RAW TEXT
+app.use('/iclock', express.text({ type: '*/*' }));
+
+// Normal APIs
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(cors());
-// Parse JSON first for API routes
-app.use(express.json()); // For JSON
-app.use(express.urlencoded({ extended: true })); // For form-data
-// ZKTeco devices send raw text, so handle text for webhook routes only
-app.use('/webhook', express.text({ type: '*/*' })); // For raw text from ZKTeco webhooks only
 app.use(morgan('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser());
-
-// let uri = ""; // Declare the 'uri' variable
 
 app.use(
   session({
     secret: 'Keybord',
     resave: false,
     saveUninitialized: true,
-    store: MongoStore.create({
-      mongoUrl: dbURI,
-    }),
+    store: MongoStore.create({ mongoUrl: dbURI }),
   })
 );
 
-// Custom middlfsdfeware to make io accessible in all routes
-
-// Serve the digital certificate
-app.get('/assets/signing/digital-certificate.txt', (req, res) => {
-  res.sendFile(path.join(__dirname, 'assets/signing/digital-certificate.txt'));
-});
-
+/* =======================
+   ROUTES
+======================= */
 app.use('/', mainRoute);
 app.use('/admin', adminRoute);
-app.use('/api/parent', parentRoute); // Parent Mobile API
-app.use('/', webhookRoute); // ZKTeco Webhook Routes
+app.use('/api/parent', parentRoute);
+app.use('/', webhookRoute);
 
+/* =======================
+   FALLBACK
+======================= */
 app.use((req, res) => {
   res.status(404).render('404', { title: '404' });
 });
