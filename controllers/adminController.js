@@ -2996,95 +2996,8 @@ const deleteInvoice = async (req, res) => {
 
 // ========== AUTOMATED ATTENDANCE SYSTEM FUNCTIONS ========== //
 
-// Assign ZKTeco User ID to Student
-const assignStudentZKTecoId = async (req, res) => {
-  try {
-    const { studentId } = req.params;
-    const { zktecoUserId } = req.body;
-
-    if (!zktecoUserId) {
-      return res.status(400).json({ error: 'ZKTeco User ID is required' });
-    }
-
-    // Check if ZKTeco ID already exists
-    const existing = await Student.findOne({
-      zktecoUserId,
-      _id: { $ne: studentId },
-    });
-    if (existing) {
-      return res.status(400).json({
-        error: `ZKTeco ID ${zktecoUserId} is already assigned to student: ${existing.studentName}`,
-      });
-    }
-
-    const student = await Student.findById(studentId);
-    if (!student) {
-      return res.status(404).json({ error: 'Student not found' });
-    }
-
-    student.zktecoUserId = zktecoUserId.trim();
-    await student.save();
-
-    res.json({
-      success: true,
-      message: 'ZKTeco User ID assigned successfully',
-      student: {
-        _id: student._id,
-        studentName: student.studentName,
-        studentCode: student.studentCode,
-        zktecoUserId: student.zktecoUserId,
-      },
-    });
-  } catch (error) {
-    console.error('Error assigning ZKTeco ID to student:', error);
-    res.status(500).json({ error: 'Error assigning ZKTeco ID' });
-  }
-};
-
-// Assign ZKTeco User ID to Employee
-const assignEmployeeZKTecoId = async (req, res) => {
-  try {
-    const { employeeId } = req.params;
-    const { zktecoUserId } = req.body;
-
-    if (!zktecoUserId) {
-      return res.status(400).json({ error: 'ZKTeco User ID is required' });
-    }
-
-    // Check if ZKTeco ID already exists
-    const existing = await Employee.findOne({
-      zktecoUserId,
-      _id: { $ne: employeeId },
-    });
-    if (existing) {
-      return res.status(400).json({
-        error: `ZKTeco ID ${zktecoUserId} is already assigned to employee: ${existing.employeeName}`,
-      });
-    }
-
-    const employee = await Employee.findById(employeeId);
-    if (!employee) {
-      return res.status(404).json({ error: 'Employee not found' });
-    }
-
-    employee.zktecoUserId = zktecoUserId.trim();
-    await employee.save();
-
-    res.json({
-      success: true,
-      message: 'ZKTeco User ID assigned successfully',
-      employee: {
-        _id: employee._id,
-        employeeName: employee.employeeName,
-        employeeCode: employee.employeeCode,
-        zktecoUserId: employee.zktecoUserId,
-      },
-    });
-  } catch (error) {
-    console.error('Error assigning ZKTeco ID to employee:', error);
-    res.status(500).json({ error: 'Error assigning ZKTeco ID' });
-  }
-};
+// Note: ZKTeco User ID assignment functions removed
+// The system now uses studentCode and employeeCode directly from ZKTeco device
 
 // Get Daily Class Attendance Report
 const getDailyClassAttendanceReport = async (req, res) => {
@@ -4071,8 +3984,6 @@ module.exports = {
   getEmployeeSalaryHistory,
 
   // Automated Attendance System
-  assignStudentZKTecoId,
-  assignEmployeeZKTecoId,
   getDailyClassAttendanceReport,
   getClassAttendanceSummary,
   getEmployeeAttendanceReport,

@@ -129,15 +129,6 @@ const studentSchema = new Schema(
       required: false,
     },
 
-    // ZKTeco Device User ID for automated attendance
-    zktecoUserId: {
-      type: String,
-      required: false,
-      unique: true,
-      sparse: true, // Allows null values while maintaining uniqueness for non-null values
-      trim: true,
-    },
-
     // Payment History (stored directly in student)
     payments: [
       {

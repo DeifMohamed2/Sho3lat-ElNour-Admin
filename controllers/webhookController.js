@@ -189,10 +189,10 @@ ${status ? `📊 Status: ${status}` : ''}
 
     const isAfter3PM = scanTime.getHours() >= 15;
 
-    // 6️⃣ Try to find Student
+    // 6️⃣ Try to find Student by studentCode
+    // ZKTeco device sends student code as user ID
     const student = await Student.findOne({
-      zktecoUserId: userId.toString(),
-      isActive: true,
+      studentCode: userId.toString(),
     }).populate('class');
 
     if (student) {
@@ -200,9 +200,10 @@ ${status ? `📊 Status: ${status}` : ''}
       return handleStudent(student, scanTime, today, isAfter3PM, deviceSN);
     }
 
-    // 7️⃣ Try to find Employee
+    // 7️⃣ Try to find Employee by employeeCode
+    // ZKTeco device sends employee code as user ID
     const employee = await Employee.findOne({
-      zktecoUserId: userId.toString(),
+      employeeCode: userId.toString(),
       isActive: true,
     });
 
@@ -211,8 +212,23 @@ ${status ? `📊 Status: ${status}` : ''}
       return handleEmployee(employee, scanTime, today, isAfter3PM, deviceSN);
     }
 
-    console.log(`⚠️  Unknown ZKTeco user ID: ${userId}`);
-    console.log(`   Please check if this user ID is assigned to a student or employee`);
+    // 8️⃣ Not found in either students or employees
+    console.log(`\n⚠️  Unknown ZKTeco user ID: ${userId}`);
+    console.log(`   Searched in:`);
+    console.log(`   - Students by studentCode`);
+    console.log(`   - Employees by employeeCode`);
+    console.log(`   Please check if this user ID (${userId}) matches a student or employee code`);
+    
+    // Try to find any student or employee with this code for debugging (including inactive)
+    const debugStudent = await Student.findOne({ studentCode: userId.toString() });
+    const debugEmployee = await Employee.findOne({ employeeCode: userId.toString() });
+    
+    if (debugStudent && !debugStudent.isActive) {
+      console.log(`   ⚠️  Found inactive student: ${debugStudent.studentName} (Code: ${debugStudent.studentCode})`);
+    }
+    if (debugEmployee && !debugEmployee.isActive) {
+      console.log(`   ⚠️  Found inactive employee: ${debugEmployee.employeeName} (Code: ${debugEmployee.employeeCode})`);
+    }
   } catch (err) {
     console.error('❌ ZKTeco error:', err);
     console.error('Stack:', err.stack);

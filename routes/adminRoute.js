@@ -322,18 +322,7 @@ router.delete(
 );
 
 // ========== AUTOMATED ATTENDANCE SYSTEM ROUTES ========== //
-
-// ZKTeco Device ID Management
-router.put(
-  '/assign-student-zkteco-id/:studentId',
-  authMiddleware,
-  adminController.assignStudentZKTecoId
-);
-router.put(
-  '/assign-employee-zkteco-id/:employeeId',
-  authMiddleware,
-  adminController.assignEmployeeZKTecoId
-);
+// Note: ZKTeco ID assignment routes removed - system now uses studentCode/employeeCode directly
 
 // Daily Class Attendance Reports
 router.get(

@@ -66,14 +66,13 @@ async function processStudentAttendance(attendanceData) {
     console.log(`   DateTime: ${DateTime}`);
     console.log(`   Status: ${Status}`);
 
-    // Find student by ZKTeco User ID
-    const student = await Student.findOne({ zktecoUserId: UserID }).populate(
+    // Find student by studentCode (ZKTeco sends student code as User ID)
+    const student = await Student.findOne({ studentCode: UserID }).populate(
       'class'
     );
 
     if (!student) {
-      console.log(`❌ Student with ZKTeco ID ${UserID} not found`);
-      console.log(`   Please assign ZKTeco ID to student in admin panel`);
+      console.log(`❌ Student with code ${UserID} not found`);
       return { success: false, message: 'Student not found' };
     }
 
@@ -173,12 +172,11 @@ async function processEmployeeAttendance(attendanceData) {
     console.log(`   DateTime: ${DateTime}`);
     console.log(`   Status: ${Status}`);
 
-    // Find employee by ZKTeco User ID
-    const employee = await Employee.findOne({ zktecoUserId: UserID });
+    // Find employee by employeeCode (ZKTeco sends employee code as User ID)
+    const employee = await Employee.findOne({ employeeCode: UserID });
 
     if (!employee) {
-      console.log(`❌ Employee with ZKTeco ID ${UserID} not found`);
-      console.log(`   Please assign ZKTeco ID to employee in admin panel`);
+      console.log(`❌ Employee with code ${UserID} not found`);
       return { success: false, message: 'Employee not found' };
     }
 
@@ -277,15 +275,15 @@ async function processAttendanceWebhook(attendanceData) {
   console.log(`\n🔍 Processing attendance webhook for UserID: ${UserID}`);
 
   try {
-    // Try to find as student first
-    const student = await Student.findOne({ zktecoUserId: UserID });
+    // Try to find as student first by studentCode
+    const student = await Student.findOne({ studentCode: UserID });
 
     if (student) {
       return await processStudentAttendance(attendanceData);
     }
 
-    // Try to find as employee
-    const employee = await Employee.findOne({ zktecoUserId: UserID });
+    // Try to find as employee by employeeCode
+    const employee = await Employee.findOne({ employeeCode: UserID });
 
     if (employee) {
       return await processEmployeeAttendance(attendanceData);
@@ -293,7 +291,7 @@ async function processAttendanceWebhook(attendanceData) {
 
     // Not found
     console.log(`❌ UserID ${UserID} not found in students or employees`);
-    console.log(`   Please assign this ZKTeco ID in the admin panel`);
+    console.log(`   Searched by studentCode and employeeCode`);
 
     return {
       success: false,
