@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<%- include("./partials/head.ejs") %>
+<style>
+  .spinner {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    border: 4.5px solid #0000;
+    border-radius: 50%;
+    border-color: #dbdcef #0000;
+    animation: spinner-e04l1k 1s infinite linear;
+  }
+
+  .spinner::before,
+  .spinner::after {
+    content: "";
+    grid-area: 1/1;
+    margin: 2.2px;
+    border: inherit;
+    border-radius: 50%;
+  }
+
+  .spinner::before {
+    border-color: #ff9847 #0000;
+    animation: inherit;
+    animation-duration: 0.5s;
+    animation-direction: reverse;
+  }
+
+  .spinner::after {
+    margin: 8.9px;
+  }
+
+  #studentTable {
+    border-collapse: collapse;
+    border: 2px solid rgba(0, 0, 0, 0.3);
+    width: 100%;
+  }
+
+  #studentTable th,
+  #studentTable td {
+    text-align: center;
+    color: black !important;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    padding: 12px 8px;
+  }
+
+  #studentTable thead {
+    background-color: #fff;
+  }
+
+  #studentTable thead th {
+    border-bottom: 2px solid rgba(0, 0, 0, 0.3);
+    font-weight: bold;
+    background-color: #f8f9fa;
+    border-top: 2px solid rgba(0, 0, 0, 0.3);
+  }
+
+  #studentTable tbody tr {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  }
+
+  #studentTable tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  #studentTable tbody td {
+    background-color: #fff;
+  }
+
+  /* Enhanced header for Students List */
+  .students-list-header {
+    border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+    background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+    padding: 20px 25px;
+    margin-bottom: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .students-list-header h5 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #000;
+    margin: 0;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Filter section */
+  .filter-section {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    margin-top: 15px;
+  }
+
+  .filter-label {
+    font-weight: 600;
+    color: #000;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+  }
+
+  /* Enhanced search input - centered */
+  .search-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 15px 0;
+  }
+
+  .search-wrapper {
+    max-width: 600px;
+    width: 100%;
+  }
+
+  #searchStudent {
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #fff;
+    text-align: center;
+  }
+
+  #searchStudent:focus {
+    border-color: rgba(0, 0, 0, 0.5);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .input-group-text {
+    background-color: #f8f9fa;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 15px;
+  }
+
+  .input-group #searchStudent {
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+  }
+
+  /* Filter dropdowns */
+  .filter-select {
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background-color: #fff;
+    cursor: pointer;
+  }
+
+  .filter-select:focus {
+    border-color: rgba(0, 0, 0, 0.5);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+  }
+
+  hr {
+    border-top: 1px solid #000;
+    border: 1px solid #000;
+    margin-top: 10px;
+    margin-bottom: 0;
+  }
+
+  .edit-student-btn {
+    background-color: #ff9847 !important;
+    color: white !important;
+    border: 1px solid transparent !important;
+    padding: 5px 10px !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    transition: all ease 0.3s !important;
+  }
+
+  .edit-student-btn:hover {
+    scale: 1.07;
+    color: #ff9847 !important;
+    background-color: white !important;
+    padding: 5px 10px !important;
+    border: 1px solid #ff9847 !important;
+  }
+
+  .delete-student-btn {
+    background-color: #ff3d71 !important;
+    color: white !important;
+    border: 1px solid transparent !important;
+    padding: 5px 10px !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    transition: all ease 0.3s !important;
+  }
+
+  .delete-student-btn:hover {
+    scale: 1.07;
+    color: #ff3d71 !important;
+    background-color: white !important;
+    padding: 5px 10px !important;
+    border: 1px solid #ff3d71 !important;
+  }
+
+  .send-code-btn {
+    background-color: #28a745 !important;
+    color: #ffffff !important;
+    border: 1px solid transparent !important;
+    padding: 5px 10px !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    transition: all ease 0.3s !important;
+  }
+
+  .send-code-btn:hover {
+    scale: 1.07;
+    color: #28a745 !important;
+    background-color: #ffffff !important;
+    padding: 5px 10px !important;
+    border: 1px solid #28a745 !important;
+  }
+
+  .view-payments-btn {
+    background-color: #17a2b8 !important;
+    color: #ffffff !important;
+    border: 1px solid transparent !important;
+    padding: 5px 10px !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    transition: all ease 0.3s !important;
+  }
+
+  .view-payments-btn:hover {
+    scale: 1.07;
+    color: #17a2b8 !important;
+    background-color: #ffffff !important;
+    padding: 5px 10px !important;
+    border: 1px solid #17a2b8 !important;
+  }
+
+  .table-responsive {
+    max-height: 500px;
+    overflow: auto;
+  }
+
+  input[type='checkbox'] {
+    border: 1px solid #000;
+    cursor: pointer;
+  }
+
+  input[type='number'] {
+    border: 1px solid #000000a8 !important;
+    text-align: center !important;
+  }
+
+  @keyframes spinner-e04l1k {
+    100% {
+      transform: rotate(1turn);
+    }
+  }
+
+  /* Modal polish - matching classes.ejs */
+  .modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    background-color: #f8f9fa;
+  }
+
+  .modal-content {
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  }
+
+  .modal-title {
+    font-weight: 700;
+    color: #1f1f1f;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+  }
+
+  .form-control,
+  .form-select {
+    border: 1.5px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 0 0.15rem rgba(0, 0, 0, 0.1);
+    outline: none;
+  }
+
+  .btn-primary {
+    background: linear-gradient(120deg, #000 0%, #444 100%);
+    border: none;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(120deg, #111 0%, #555 100%);
+  }
+
+  .btn-danger {
+    background: linear-gradient(120deg, #dc3545 0%, #c82333 100%);
+    border: none;
+  }
+
+  .btn-danger:hover {
+    background: linear-gradient(120deg, #c82333 0%, #bd2130 100%);
+  }
+
+  /* Enhanced Payments Section */
+  .payment-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .payment-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .payment-table {
+    border-collapse: collapse;
+  }
+
+  .payment-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    padding: 12px;
+  }
+
+  .payment-table td {
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    padding: 10px;
+  }
+
+  .payment-table tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 0.875rem;
+  }
+
+  /* Enhanced Payment Modal */
+  #addEditPaymentModal .modal-header {
+    background: linear-gradient(135deg, #000 0%, #333 100%);
+    border-bottom: none;
+  }
+
+  #addEditPaymentModal .modal-body {
+    background-color: #fafafa;
+  }
+
+  #addEditPaymentModal .form-control-lg,
+  #addEditPaymentModal .form-select-lg {
+    border: 2px solid rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  #addEditPaymentModal .form-control-lg:focus,
+  #addEditPaymentModal .form-select-lg:focus {
+    border-color: rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.1);
+    outline: none;
+  }
+
+  #addEditPaymentModal .form-label {
+    color: #333;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #addEditPaymentModal .modal-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 15px 20px;
+  }
+
+  #addEditPaymentModal .btn-lg {
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Enhanced Payments History Modal */
+  .payments-modal-content {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  }
+
+  .payments-modal-header {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border-bottom: 3px solid rgba(255, 255, 255, 0.1);
+    padding: 20px 25px;
+    color: white;
+  }
+
+  .payments-modal-header .modal-title {
+    color: white;
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
+  }
+
+  .payments-modal-body {
+    background: linear-gradient(to bottom, #fafafa, #ffffff);
+    padding: 25px;
+    min-height: 400px;
+  }
+
+  .payments-modal-footer {
+    background-color: #f8f9fa;
+    border-top: 2px solid rgba(0, 0, 0, 0.1);
+    padding: 15px 25px;
+  }
+
+  /* Enhanced Payment Summary Cards */
+  .payment-summary-card {
+    background: white;
+    border-radius: 12px;
+    border: 2px solid rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .payment-summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, currentColor, transparent);
+    opacity: 0.3;
+  }
+
+  .payment-summary-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    border-color: rgba(0, 0, 0, 0.15);
+  }
+
+  .payment-summary-card .card-body {
+    padding: 25px 20px;
+  }
+
+  .payment-summary-card .icon-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .payment-summary-card h6 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .payment-summary-card h4 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  /* Enhanced Payment Table */
+  .payments-table-wrapper {
+    background: white;
+    border-radius: 12px;
+    border: 2px solid rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .payments-table-wrapper .table {
+    margin: 0;
+  }
+
+  .payments-table-wrapper thead {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  }
+
+  .payments-table-wrapper thead th {
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #333;
+    padding: 15px 12px;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+  }
+
+  .payments-table-wrapper tbody td {
+    padding: 15px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .payments-table-wrapper tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .payments-table-wrapper tbody tr {
+    transition: background-color 0.2s ease;
+  }
+
+  .payments-table-wrapper tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+
+  .payment-amount-cell {
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .payment-action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .payment-action-buttons .btn {
+    border-radius: 6px;
+    padding: 6px 12px;
+    transition: all 0.2s ease;
+  }
+
+  .payment-action-buttons .btn:hover {
+    transform: scale(1.05);
+  }
+
+  .empty-payments-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 12px;
+    border: 2px dashed rgba(0, 0, 0, 0.1);
+  }
+
+  .empty-payments-state i {
+    font-size: 4rem;
+    color: #ccc;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .empty-payments-state p {
+    color: #666;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+</style>
+
+<body class="g-sidenav-show rtl bg-gray-100">
+  <%- include("./partials/aside.ejs") %>
+
+  <!-- Main content -->
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
+    <%- include("./partials/nav.ejs") %>
+
+    <!-- Edit Student Modal -->
+    <div class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editStudentModalLabel">تعديل بيانات الطالب</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editStudentForm">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="editStudentName" class="form-label">اسم الطالب</label>
+                  <input type="text" class="form-control border border-2 p-2" id="editStudentName" name="editStudentName" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editStudentCode" class="form-label">كود الطالب</label>
+                  <input type="text" class="form-control border border-2 p-2" id="editStudentCode" name="editStudentCode" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editStudentGender" class="form-label">الجنس</label>
+                  <select class="form-select border border-2 p-2" id="editStudentGender" name="editStudentGender" required>
+                    <option value="">اختر الجنس</option>
+                    <option value="ذكر">ذكر</option>
+                    <option value="أنثى">أنثى</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editClassId" class="form-label">الفصل</label>
+                  <select class="form-select border border-2 p-2" id="editClassId" name="editClassId" required>
+                    <option value="">اختر الفصل</option>
+                    <% if (allClasses && allClasses.length > 0) { %>
+                    <% allClasses.forEach(cls => { %>
+                    <option value="<%= cls._id %>"><%= cls.academicLevel %> - <%= cls.section %></option>
+                    <% }) %>
+                    <% } %>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editParentName" class="form-label">اسم ولي الأمر</label>
+                  <input type="text" class="form-control border border-2 p-2" id="editParentName" name="editParentName" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editParentPhone1" class="form-label">هاتف ولي الأمر 1</label>
+                  <input type="number" class="form-control border border-2 p-2" id="editParentPhone1" name="editParentPhone1" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editParentPhone2" class="form-label">هاتف ولي الأمر 2 (اختياري)</label>
+                  <input type="number" class="form-control border border-2 p-2" id="editParentPhone2" name="editParentPhone2">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editTotalSchoolFees" class="form-label">إجمالي المصروفات المدرسية</label>
+                  <input type="number" class="form-control border border-2 p-2" id="editTotalSchoolFees" name="editTotalSchoolFees" min="0" step="0.01" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editAddress" class="form-label">العنوان (اختياري)</label>
+                  <input type="text" class="form-control border border-2 p-2" id="editAddress" name="editAddress">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editNotes" class="form-label">ملاحظات (اختيارية)</label>
+                  <textarea class="form-control border border-2 p-2" id="editNotes" name="editNotes" rows="2"></textarea>
+                </div>
+              </div>
+              <input type="hidden" id="editStudentId">
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+            <button type="button" class="btn btn-primary" id="saveEditStudentBtn">حفظ التعديلات</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Payments Modal -->
+    <div class="modal fade" id="viewPaymentsModal" tabindex="-1" aria-labelledby="viewPaymentsModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content payments-modal-content">
+          <div class="modal-header payments-modal-header">
+            <div class="d-flex align-items-center w-100">
+              <div class="flex-grow-1">
+                <h5 class="modal-title mb-0 fw-bold" id="viewPaymentsModalLabel">
+                  <i class="material-symbols-rounded me-2" style="font-size: 24px; vertical-align: middle;">receipt_long</i>
+                  سجل المدفوعات
+                </h5>
+              </div>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+          </div>
+          <div class="modal-body payments-modal-body">
+            <div id="paymentsSummary" class="mb-4">
+              <!-- Payment summary will be loaded here -->
+            </div>
+            
+            <!-- Add Payment Button -->
+            <div class="mb-4 text-end">
+              <button type="button" class="btn btn-primary btn-lg shadow-sm" id="addPaymentBtn" style="border-radius: 10px; padding: 12px 28px; font-weight: 600;">
+                <i class="material-symbols-rounded me-2" style="font-size: 20px; vertical-align: middle;">add_circle</i>
+                إضافة دفعة جديدة
+              </button>
+            </div>
+            
+            <div id="paymentsHistory">
+              <!-- Payment history table will be loaded here -->
+            </div>
+          </div>
+          <div class="modal-footer payments-modal-footer">
+            <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal" style="border-radius: 8px; padding: 10px 20px;">
+              <i class="material-symbols-rounded me-2" style="font-size: 18px; vertical-align: middle;">close</i>
+              إغلاق
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add/Edit Payment Modal -->
+    <div class="modal fade" id="addEditPaymentModal" tabindex="-1" aria-labelledby="addEditPaymentModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header bg-gradient-dark text-white">
+            <h5 class="modal-title fw-bold" id="addEditPaymentModalLabel">
+              <i class="material-symbols-rounded me-2" style="vertical-align: middle;">payments</i>
+              إضافة دفعة جديدة
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4">
+            <form id="addEditPaymentForm">
+              <input type="hidden" id="paymentStudentId">
+              <input type="hidden" id="paymentId">
+              
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="paymentAmount" class="form-label fw-bold">
+                    <i class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">attach_money</i>
+                    المبلغ (ج.م) <span class="text-danger">*</span>
+                  </label>
+                  <input type="number" class="form-control form-control-lg" id="paymentAmount" min="0" step="0.01" placeholder="0.00" required>
+                  <div class="form-text">أدخل المبلغ المدفوع</div>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="paymentMethod" class="form-label fw-bold">
+                    <i class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">payment</i>
+                    طريقة الدفع <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select form-select-lg" id="paymentMethod" required>
+                    <option value="cash" selected>💵 نقدي</option>
+                    <option value="bank_transfer">🏦 تحويل بنكي</option>
+                    <option value="card">💳 بطاقة</option>
+                    <option value="other">📝 أخرى</option>
+                  </select>
+                  <div class="form-text">اختر طريقة الدفع</div>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="paymentDate" class="form-label fw-bold">
+                    <i class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">calendar_today</i>
+                    تاريخ الدفعة <span class="text-danger">*</span>
+                  </label>
+                  <input type="date" class="form-control form-control-lg" id="paymentDate" required>
+                  <div class="form-text">تاريخ استلام الدفعة</div>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="paymentReceiptNumber" class="form-label fw-bold">
+                    <i class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">receipt</i>
+                    رقم الإيصال (اختياري)
+                  </label>
+                  <input type="text" class="form-control form-control-lg" id="paymentReceiptNumber" placeholder="رقم الإيصال">
+                  <div class="form-text">رقم إيصال الدفعة إن وجد</div>
+                </div>
+                
+                <div class="col-12">
+                  <label for="paymentNotes" class="form-label fw-bold">
+                    <i class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">note</i>
+                    ملاحظات (اختيارية)
+                  </label>
+                  <textarea class="form-control" id="paymentNotes" rows="3" placeholder="أضف أي ملاحظات إضافية..."></textarea>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer bg-light">
+            <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">
+              <i class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">close</i>
+              إلغاء
+            </button>
+            <button type="button" class="btn btn-primary btn-lg" id="savePaymentBtn">
+              <i class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">save</i>
+              حفظ الدفعة
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteStudentModal" tabindex="-1" aria-labelledby="deleteStudentModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteStudentModalLabel">تأكيد الحذف</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>هل أنت متأكد من حذف الطالب <strong id="deleteStudentName"></strong>؟</p>
+            <p class="text-danger"><small>ملاحظة: لن يمكنك التراجع عن هذا الإجراء.</small></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">حذف</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Send Code Modal -->
+    <div class="modal fade" id="sendCodeModal" tabindex="-1" aria-labelledby="sendCodeModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="sendCodeModalLabel">إرسال كود الطالب</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">اسم الطالب</label>
+              <input type="text" class="form-control" id="sendCodeStudentName" readonly>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">كود الطالب</label>
+              <input type="text" class="form-control" id="sendCodeStudentCode" readonly>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">رقم هاتف ولي الأمر</label>
+              <input type="text" class="form-control" id="sendCodePhone" readonly>
+            </div>
+            <div class="alert alert-info">
+              <i class="material-symbols-rounded">info</i>
+              سيتم إرسال كود الطالب إلى رقم الهاتف المذكور أعلاه.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+            <button type="button" class="btn btn-primary" id="confirmSendCodeBtn">إرسال</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-fluid py-2">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="row">
+            <div class="col-md-12 mb-lg-0 mb-4">
+              <form id="addStudentForm">
+                <div class="card mt-4">
+                  <div class="card-header pb-0 p-3">
+                    <div class="row">
+                      <div class="col-6 d-flex align-items-center">
+                        <h5 class="mb-0">إضافة طالب جديد</h5>
+                      </div>
+                      <div class="col-6 text-start">
+                        <button type="submit" class="btn bg-gradient-dark mb-0" id="addNewStudentBtn">
+                          <i class="material-symbols-rounded text-sm">add</i>&nbsp;&nbsp;إضافة
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-body p-3">
+                    <div class="row">
+                      <div class="col-md-3">
+                        <div class="input-group mb-3 border border-2 rounded">
+                          <input type="text" class="form-control p-2 fs-5 text-center" placeholder="اسم الطالب" id="studentName" name="studentName" required>
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <select class="form-select border border-2 rounded text-center p-2" id="studentGender" name="studentGender" required>
+                          <option selected value="">اختر الجنس</option>
+                          <option value="ذكر">ذكر</option>
+                          <option value="أنثى">أنثى</option>
+                        </select>
+                      </div>
+                      <div class="col-md-3">
+                        <select class="form-select border border-2 rounded text-center p-2" id="classId" name="classId" required>
+                          <option selected value="">اختر الفصل</option>
+                          <% if (allClasses && allClasses.length > 0) { %>
+                          <% allClasses.forEach(cls => { %>
+                          <option value="<%= cls._id %>"><%= cls.academicLevel %> - <%= cls.section %></option>
+                          <% }) %>
+                          <% } %>
+                        </select>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="input-group mb-3 border border-2 rounded">
+                          <input type="text" class="form-control p-2 fs-5 text-center" placeholder="اسم ولي الأمر" id="parentName" name="parentName" required>
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="input-group mb-3 border border-2 rounded">
+                          <input type="number" class="form-control p-2 fs-5 text-center" placeholder="هاتف ولي الأمر 1" id="parentPhone1" name="parentPhone1" required>
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="input-group mb-3 border border-2 rounded">
+                          <input type="number" class="form-control p-2 fs-5 text-center" placeholder="هاتف ولي الأمر 2 (اختياري)" id="parentPhone2" name="parentPhone2">
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="input-group mb-3 border border-2 rounded">
+                          <input type="number" class="form-control p-2 fs-5 text-center" placeholder="إجمالي المصروفات" id="totalSchoolFees" name="totalSchoolFees" min="0" step="0.01" required>
+                        </div>
+                      </div>
+                      <div class="col-md-3 d-flex align-items-center">
+                        <div class="form-check mx-2">
+                          <input class="form-check-input" type="checkbox" id="bookTaken" name="bookTaken">
+                          <label class="form-check-label" for="bookTaken">تم استلام الكتاب</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="spinner" class="spinner mx-auto d-none"></div>
+                </div>
+              </form>
+
+              <!-- Students Table -->
+              <div class="card mt-4">
+                <div class="card-header students-list-header">
+                  <div class="row">
+                    <div class="col-12 text-center mb-3">
+                      <h5 class="mb-0">قائمة الطلاب</h5>
+                    </div>
+                  </div>
+                  
+                  <!-- Centered Search -->
+                  <div class="search-container">
+                    <div class="search-wrapper">
+                      <div class="input-group">
+                        <input type="text" class="form-control" placeholder="البحث في جميع البيانات..." id="searchStudent">
+                        <span class="input-group-text"><i class="material-symbols-rounded">search</i></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Filter Section -->
+                  <div class="filter-section">
+                    <div class="row g-3">
+                      <div class="col-md-3">
+                        <label class="filter-label">تصفية حسب الفصل</label>
+                        <select class="form-select filter-select" id="filterClass">
+                          <option value="">جميع الفصول</option>
+                          <% if (allClasses && allClasses.length > 0) { %>
+                          <% allClasses.forEach(cls => { %>
+                          <option value="<%= cls._id %>"><%= cls.academicLevel %> - <%= cls.section %></option>
+                          <% }) %>
+                          <% } %>
+                        </select>
+                      </div>
+                      <div class="col-md-3">
+                        <label class="filter-label">تصفية حسب الجنس</label>
+                        <select class="form-select filter-select" id="filterGender">
+                          <option value="">جميع الأجناس</option>
+                          <option value="ذكر">ذكر</option>
+                          <option value="أنثى">أنثى</option>
+                        </select>
+                      </div>
+                      <div class="col-md-3">
+                        <label class="filter-label">تصفية حسب حالة الدفع</label>
+                        <select class="form-select filter-select" id="filterPayment">
+                          <option value="">جميع الحالات</option>
+                          <option value="paid">مدفوع بالكامل</option>
+                          <option value="partial">مدفوع جزئياً</option>
+                          <option value="unpaid">غير مدفوع</option>
+                        </select>
+                      </div>
+                      <div class="col-md-3">
+                        <label class="filter-label">إجراءات</label>
+                        <button type="button" class="btn btn-outline-dark w-100 filter-select" id="clearFilters" style="padding: 10px 15px;">
+                          <i class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">clear_all</i>
+                          مسح الفلاتر
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body p-3">
+                  <div class="table-responsive">
+                    <table class="table align-items-center mb-0" id="studentTable">
+                      <thead>
+                        <tr>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">كود الطالب</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">اسم الطالب</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">الفصل</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">هاتف ولي الأمر</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">إجمالي المصروفات</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">المدفوع</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">المتبقي</th>
+                          <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">الإجراءات</th>
+                        </tr>
+                      </thead>
+                      <tbody id="studentTableBody">
+                        <!-- Students will be loaded here dynamically -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Core JS - Load Bootstrap first -->
+  <script src="../assets/js/core/popper.min.js"></script>
+  <script src="../assets/js/core/bootstrap.min.js"></script>
+  <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
+  <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
+  <!-- Student Management JS - Load after Bootstrap -->
+  <script src="/js/adminJS/addStudent.js"></script>
+</body>
+
+</html>

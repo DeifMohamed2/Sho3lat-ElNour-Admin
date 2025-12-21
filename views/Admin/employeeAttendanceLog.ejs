@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <%- include('partials/head') %>
+  <title>سجل الموظف الشامل</title>
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+
+    .search-section {
+      background-color: #fff;
+      padding: 25px;
+      border-radius: 8px;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      margin-bottom: 25px;
+    }
+
+    .employee-info-card {
+      background-color: #fff;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 25px;
+      margin-bottom: 25px;
+    }
+
+    .stats-card {
+      background: white;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .stats-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .stats-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 10px 0;
+      color: #000;
+    }
+
+    .stats-label {
+      color: #000;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .stats-icon {
+      font-size: 1.5rem;
+      color: #000;
+      margin-bottom: 10px;
+    }
+
+    .form-control,
+    .form-select {
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 10px 15px;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      background-color: #fff;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+      border-color: rgba(0, 0, 0, 0.5);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn {
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(120deg, #000 0%, #444 100%);
+      border: none;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(120deg, #111 0%, #555 100%);
+      color: white;
+    }
+
+    .btn-secondary {
+      background-color: #fff;
+      color: #000;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-secondary:hover {
+      background-color: #f8f9fa;
+      color: #000;
+      border-color: rgba(0, 0, 0, 0.3);
+    }
+
+    .card {
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      background-color: #fff;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      background-color: #f8f9fa;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+      padding: 15px 20px;
+      font-weight: 600;
+      color: #000;
+    }
+
+    .table {
+      color: #000;
+    }
+
+    .table thead {
+      background-color: #f8f9fa;
+    }
+
+    .table thead th {
+      border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+      font-weight: 600;
+      color: #000;
+      padding: 12px;
+    }
+
+    .table tbody td {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      padding: 12px;
+      color: #000;
+    }
+
+    .table tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 5px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      background: #fff;
+      color: #000;
+    }
+
+    .page-header {
+      border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+      background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+      padding: 20px 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .page-header h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #000;
+      margin: 0;
+    }
+
+    .nav-tabs {
+      border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+    }
+
+    .nav-tabs .nav-link {
+      color: #000;
+      border: 2px solid transparent;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      padding: 10px 20px;
+      font-weight: 600;
+    }
+
+    .nav-tabs .nav-link:hover {
+      border-color: rgba(0, 0, 0, 0.1);
+      background-color: #f8f9fa;
+    }
+
+    .nav-tabs .nav-link.active {
+      color: #000;
+      background-color: #fff;
+      border-color: rgba(0, 0, 0, 0.2);
+      border-bottom-color: #fff;
+    }
+
+    .tab-content {
+      padding: 20px 0;
+    }
+
+    .info-row {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      font-weight: 600;
+      color: #000;
+      margin-bottom: 5px;
+    }
+
+    .info-value {
+      color: #000;
+    }
+
+    .scan-item {
+      background: #f8f9fa;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+
+<body class="g-sidenav-show rtl bg-gray-100">
+  <%- include('partials/aside') %>
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
+    <%- include('partials/nav') %>
+
+    <div class="container-fluid py-2">
+      <!-- Header -->
+      <div class="page-header">
+        <h2 class="mb-0">
+          <i class="material-symbols-rounded me-2" style="font-size: 28px; vertical-align: middle;">history</i>
+          سجل الموظف الشامل
+        </h2>
+        <p class="text-sm">عرض جميع سجلات الموظف (حضور، مرتبات، خصومات، وغيرها)</p>
+      </div>
+
+      <!-- Search Section -->
+      <div class="search-section">
+        <div class="row align-items-end">
+          <div class="col-md-8">
+            <label class="form-label" style="font-weight: 600; color: #000;">ابحث بكود الموظف</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="employeeCodeSearch" placeholder="أدخل كود الموظف (6 أرقام)" maxlength="6">
+              <button class="btn btn-primary" type="button" onclick="searchEmployee()">
+                <i class="material-symbols-rounded me-2">search</i>بحث
+              </button>
+            </div>
+          </div>
+          <div class="col-md-4 text-end">
+            <button class="btn btn-secondary" onclick="exportToExcel()" id="exportBtn" style="display: none;">
+              <i class="material-symbols-rounded me-2">download</i>تصدير Excel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employee Info Card (Hidden Initially) -->
+      <div id="employeeInfoSection" style="display: none;">
+        <div class="employee-info-card">
+          <div class="row">
+            <div class="col-md-8">
+              <h4 class="mb-3" id="employeeName">اسم الموظف</h4>
+              <div class="row">
+                <div class="col-md-4 info-row">
+                  <div class="info-label">كود الموظف:</div>
+                  <div class="info-value" id="employeeCode">---</div>
+                </div>
+                <div class="col-md-4 info-row">
+                  <div class="info-label">النوع:</div>
+                  <div class="info-value" id="employeeType">---</div>
+                </div>
+                <div class="col-md-4 info-row">
+                  <div class="info-label">رقم الهاتف:</div>
+                  <div class="info-value" id="employeePhone">---</div>
+                </div>
+                <div class="col-md-4 info-row">
+                  <div class="info-label">نوع التوظيف:</div>
+                  <div class="info-value" id="employmentType">---</div>
+                </div>
+                <div class="col-md-4 info-row">
+                  <div class="info-label">الراتب الشهري:</div>
+                  <div class="info-value" id="employeeSalary">---</div>
+                </div>
+                <div class="col-md-4 info-row">
+                  <div class="info-label">السعر بالساعة:</div>
+                  <div class="info-value" id="hourlyRate">---</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 text-end">
+              <div class="stats-card">
+                <div class="stats-icon">
+                  <i class="material-symbols-rounded">schedule</i>
+                </div>
+                <div class="stats-number" id="totalHours">0س</div>
+                <div class="stats-label">إجمالي الساعات</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+              <div class="stats-icon">
+                <i class="material-symbols-rounded">check_circle</i>
+              </div>
+              <div class="stats-number" id="totalDays">0</div>
+              <div class="stats-label">أيام العمل</div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+              <div class="stats-icon">
+                <i class="material-symbols-rounded">schedule</i>
+              </div>
+              <div class="stats-number" id="avgHours">0س</div>
+              <div class="stats-label">متوسط الساعات</div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+              <div class="stats-icon">
+                <i class="material-symbols-rounded">cancel</i>
+              </div>
+              <div class="stats-number" id="totalAbsent">0</div>
+              <div class="stats-label">أيام الغياب</div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+              <div class="stats-icon">
+                <i class="material-symbols-rounded">payments</i>
+              </div>
+              <div class="stats-number" id="totalPaid">0</div>
+              <div class="stats-label">إجمالي المرتبات</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" id="logTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance" type="button" role="tab">
+              <i class="material-symbols-rounded me-2">fact_check</i>سجل الحضور
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab">
+              <i class="material-symbols-rounded me-2">payments</i>سجل المرتبات
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="deductions-tab" data-bs-toggle="tab" data-bs-target="#deductions" type="button" role="tab">
+              <i class="material-symbols-rounded me-2">remove_circle</i>الخصومات
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="logTabContent">
+          <!-- Attendance Tab -->
+          <div class="tab-pane fade show active" id="attendance" role="tabpanel">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">سجل الحضور الكامل</h5>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                  <table class="table align-items-center mb-0">
+                    <thead style="position: sticky; top: 0; z-index: 10; background: #f8f9fa;">
+                      <tr>
+                        <th>#</th>
+                        <th>التاريخ</th>
+                        <th>اليوم</th>
+                        <th>وقت الدخول</th>
+                        <th>وقت الخروج</th>
+                        <th>الساعات</th>
+                        <th>الحالة</th>
+                        <th>الملاحظات</th>
+                      </tr>
+                    </thead>
+                    <tbody id="attendanceTableBody">
+                      <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">جاري التحميل...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payments Tab -->
+          <div class="tab-pane fade" id="payments" role="tabpanel">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">سجل المرتبات</h5>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                  <table class="table align-items-center mb-0">
+                    <thead style="position: sticky; top: 0; z-index: 10; background: #f8f9fa;">
+                      <tr>
+                        <th>#</th>
+                        <th>التاريخ</th>
+                        <th>المبلغ</th>
+                        <th>الشهر</th>
+                        <th>طريقة الدفع</th>
+                        <th>ملاحظات</th>
+                      </tr>
+                    </thead>
+                    <tbody id="paymentsTableBody">
+                      <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">جاري التحميل...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Deductions Tab -->
+          <div class="tab-pane fade" id="deductions" role="tabpanel">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">سجل الخصومات</h5>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                  <table class="table align-items-center mb-0">
+                    <thead style="position: sticky; top: 0; z-index: 10; background: #f8f9fa;">
+                      <tr>
+                        <th>#</th>
+                        <th>التاريخ</th>
+                        <th>المبلغ</th>
+                        <th>السبب</th>
+                        <th>الشهر</th>
+                        <th>ملاحظات</th>
+                      </tr>
+                    </thead>
+                    <tbody id="deductionsTableBody">
+                      <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">جاري التحميل...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="../assets/js/core/bootstrap.min.js"></script>
+  <script>
+    let currentEmployeeId = null;
+
+    async function searchEmployee() {
+      const code = document.getElementById('employeeCodeSearch').value.trim();
+      if (!code || code.length !== 6) {
+        alert('يرجى إدخال كود موظف صحيح (6 أرقام)');
+        return;
+      }
+
+      try {
+        const response = await axios.get(`/admin/employee-log-by-code/${code}`);
+        if (response.data.success) {
+          currentEmployeeId = response.data.employee._id;
+          displayEmployeeData(response.data);
+          document.getElementById('employeeInfoSection').style.display = 'block';
+          document.getElementById('exportBtn').style.display = 'block';
+        } else {
+          alert('لم يتم العثور على موظف بهذا الكود');
+        }
+      } catch (error) {
+        console.error('Error searching employee:', error);
+        if (error.response && error.response.status === 404) {
+          alert('لم يتم العثور على موظف بهذا الكود');
+        } else {
+          alert('حدث خطأ في البحث');
+        }
+      }
+    }
+
+    function displayEmployeeData(data) {
+      const employee = data.employee;
+      const attendance = data.attendance || [];
+      const payments = data.payments || [];
+      const deductions = data.deductions || [];
+
+      // Display employee info
+      document.getElementById('employeeName').textContent = employee.employeeName || 'غير معروف';
+      document.getElementById('employeeCode').textContent = employee.employeeCode || 'N/A';
+      document.getElementById('employeeType').textContent = employee.employeeType === 'teacher' ? 'معلم' : 'إداري';
+      document.getElementById('employeePhone').textContent = employee.employeePhoneNumber || 'غير متوفر';
+      document.getElementById('employmentType').textContent = employee.employmentType === 'Full-Time' ? 'دوام كامل' : 'دوام جزئي';
+      document.getElementById('employeeSalary').textContent = (employee.employeeSalary || 0) + ' ج.م';
+      document.getElementById('hourlyRate').textContent = (employee.hourlyRate || 0) + ' ج.م/ساعة';
+
+      // Calculate statistics
+      const totalDays = attendance.length;
+      const totalHours = attendance.reduce((sum, a) => sum + (a.totalHours || 0), 0);
+      const avgHours = totalDays > 0 ? (totalHours / totalDays).toFixed(1) : 0;
+      const totalAbsent = attendance.filter(a => a.status === 'Absent').length;
+      const totalPaid = payments.reduce((sum, p) => sum + (p.amount || p.totalAmount || 0), 0);
+
+      // Update statistics
+      document.getElementById('totalDays').textContent = totalDays;
+      document.getElementById('totalHours').textContent = totalHours.toFixed(1) + 'س';
+      document.getElementById('avgHours').textContent = avgHours + 'س';
+      document.getElementById('totalAbsent').textContent = totalAbsent;
+      document.getElementById('totalPaid').textContent = totalPaid + ' ج.م';
+
+      // Render tables
+      renderAttendanceTable(attendance);
+      renderPaymentsTable(payments);
+      renderDeductionsTable(deductions);
+    }
+
+    function renderAttendanceTable(attendance) {
+      const tbody = document.getElementById('attendanceTableBody');
+      
+      if (!attendance || attendance.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted">لا توجد سجلات حضور</td></tr>';
+        return;
+      }
+
+      // Sort by date descending (latest first)
+      attendance.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      tbody.innerHTML = attendance.map((att, index) => {
+        const date = new Date(att.date);
+        const dayName = date.toLocaleDateString('ar-EG', { weekday: 'long' });
+        
+        let statusBadge = '';
+        if (att.status === 'Present') {
+          statusBadge = '<span class="status-badge"><i class="material-symbols-rounded me-1" style="font-size: 16px;">check_circle</i>حاضر</span>';
+        } else if (att.status === 'Absent') {
+          statusBadge = '<span class="status-badge"><i class="material-symbols-rounded me-1" style="font-size: 16px;">cancel</i>غائب</span>';
+        } else if (att.status === 'Late') {
+          statusBadge = '<span class="status-badge"><i class="material-symbols-rounded me-1" style="font-size: 16px;">schedule</i>متأخر</span>';
+        } else if (att.status === 'Half-Day') {
+          statusBadge = '<span class="status-badge"><i class="material-symbols-rounded me-1" style="font-size: 16px;">schedule</i>نصف يوم</span>';
+        } else if (att.status === 'On-Leave') {
+          statusBadge = '<span class="status-badge"><i class="material-symbols-rounded me-1" style="font-size: 16px;">event_busy</i>إجازة</span>';
+        }
+
+        return `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${date.toLocaleDateString('ar-EG')}</td>
+            <td>${dayName}</td>
+            <td>${att.checkInTime ? new Date(att.checkInTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '---'}</td>
+            <td>${att.checkOutTime ? new Date(att.checkOutTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '---'}</td>
+            <td><strong>${(att.totalHours || 0).toFixed(1)} ساعة</strong></td>
+            <td>${statusBadge}</td>
+            <td>${att.notes || '---'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderPaymentsTable(payments) {
+      const tbody = document.getElementById('paymentsTableBody');
+      
+      if (!payments || payments.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">لا توجد مرتبات مسجلة</td></tr>';
+        return;
+      }
+
+      // Sort by date descending (latest first)
+      payments.sort((a, b) => new Date(b.paymentDate || b.createdAt) - new Date(a.paymentDate || a.createdAt));
+
+      tbody.innerHTML = payments.map((payment, index) => {
+        const paymentDate = new Date(payment.paymentDate || payment.createdAt);
+        const amount = payment.amount || payment.totalAmount || 0;
+        const paymentMethod = payment.paymentMethod === 'cash' ? 'نقدي' : 
+                             payment.paymentMethod === 'bank_transfer' ? 'تحويل بنكي' :
+                             payment.paymentMethod === 'card' ? 'بطاقة' : 'أخرى';
+
+        return `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${paymentDate.toLocaleDateString('ar-EG')}</td>
+            <td><strong>${amount} ج.م</strong></td>
+            <td>${payment.month || payment.paymentMonth || 'غير محدد'}</td>
+            <td>${paymentMethod}</td>
+            <td>${payment.notes || '---'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderDeductionsTable(deductions) {
+      const tbody = document.getElementById('deductionsTableBody');
+      
+      if (!deductions || deductions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">لا توجد خصومات</td></tr>';
+        return;
+      }
+
+      // Sort by date descending (latest first)
+      deductions.sort((a, b) => new Date(b.deductionDate || b.createdAt) - new Date(a.deductionDate || a.createdAt));
+
+      tbody.innerHTML = deductions.map((deduction, index) => {
+        const deductionDate = new Date(deduction.deductionDate || deduction.createdAt);
+
+        return `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${deductionDate.toLocaleDateString('ar-EG')}</td>
+            <td><strong class="text-danger">${deduction.amount} ج.م</strong></td>
+            <td>${deduction.reason || 'غير محدد'}</td>
+            <td>${deduction.appliedToMonth || deduction.month || 'غير محدد'}</td>
+            <td>${deduction.notes || '---'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function exportToExcel() {
+      if (!currentEmployeeId) {
+        alert('يرجى البحث عن موظف أولاً');
+        return;
+      }
+      window.location.href = `/admin/export-employee-log/${currentEmployeeId}`;
+    }
+
+    // Allow Enter key to search
+    document.getElementById('employeeCodeSearch').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        searchEmployee();
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<%- include("../Admin/partials/head.ejs") %>
+
+<style>
+.spinner {
+   width: 56px;
+   height: 56px;
+   display: grid;
+   border: 4.5px solid #0000;
+   border-radius: 50%;
+   border-color: #dbdcef #0000;
+   animation: spinner-e04l1k 1s infinite linear;
+}
+
+.spinner::before,
+.spinner::after {
+   content: "";
+   grid-area: 1/1;
+   margin: 2.2px;
+   border: inherit;
+   border-radius: 50%;
+}
+
+.spinner::before {
+   border-color: #000;
+   animation: inherit;
+   animation-duration: 0.5s;
+   animation-direction: reverse;
+}
+
+.spinner::after {
+   margin: 8.9px;
+}
+
+@keyframes spinner-e04l1k {
+   100% {
+      transform: rotate(1turn);
+   }
+}
+
+.employee-card {
+  background: #000;
+  color: white;
+  border-radius: 10px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.employee-card h2,
+.employee-card p,
+.employee-card span,
+.employee-card div {
+  color: white !important;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #000;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.history-item {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.history-item:hover {
+  background: #f0f0f0;
+  border-color: #000;
+}
+
+.salary-item {
+  border-left: 4px solid #000;
+}
+
+.kpi-item {
+  border-left: 4px solid #28a745;
+}
+
+.attendance-item {
+  border-left: 4px solid #007bff;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.tab-content {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 1.5rem;
+}
+
+.nav-tabs .nav-link {
+  color: #666;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+  color: #000;
+  background: none;
+  border-bottom: 2px solid #000;
+}
+
+.nav-tabs .nav-link:hover {
+  color: #000;
+  border-bottom: 2px solid #ccc;
+}
+
+.card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  border-radius: 8px 8px 0 0;
+}
+
+.btn-outline-primary {
+  border-color: #000;
+  color: #000;
+}
+
+.btn-outline-primary:hover {
+  background: #000;
+  color: white;
+}
+
+.text-success {
+  color: #28a745 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.text-info {
+  color: #007bff !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+</style>
+
+<body class="g-sidenav-show rtl bg-gray-100">
+  <%- include("../Admin/partials/aside.ejs") %>
+
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg overflow-x-hidden">
+    <!-- Navbar -->
+    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 shadow-none border-radius-xl" id="navbarBlur" data-scroll="true">
+      <div class="container-fluid py-1 px-3">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0">
+            <li class="breadcrumb-item text-sm ps-2"><a class="opacity-5 text-dark" href="/admin/employee">الموظفين</a></li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">سجل الموظف</li>
+          </ol>
+          <h6 class="font-weight-bolder mb-0">سجل الموظف التفصيلي</h6>
+        </nav>
+        <div class="collapse navbar-collapse mt-sm-0 mt-2 px-0" id="navbar">
+          <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+            <a href="/admin/employee" class="btn btn-outline-primary btn-sm">
+              <i class="material-symbols-rounded">arrow_back</i>
+              العودة للموظفين
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+      <!-- Loading Spinner -->
+      <div id="loadingSpinner" class="text-center py-5">
+        <div class="spinner mx-auto"></div>
+        <p class="mt-3">جاري تحميل بيانات الموظف...</p>
+      </div>
+
+      <!-- Employee Information -->
+      <div id="employeeContent" style="display: none;">
+        <!-- Employee Header Card -->
+        <div class="employee-card">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h2 id="employeeName" class="mb-2">اسم الموظف</h2>
+              <p class="mb-1"><strong>رقم الهاتف:</strong> <span id="employeePhone"></span></p>
+              <p class="mb-0"><strong>الراتب الأساسي:</strong> <span id="baseSalary"></span></p>
+            </div>
+            <div class="col-md-4 text-end">
+              <div class="stat-number" id="totalSalary">0</div>
+              <p class="mb-0">إجمالي الراتب</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics Row -->
+        <div class="row mb-4">
+          <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <div class="stat-label">Total Bonuses</div>
+                  <div class="stat-number text-success" id="totalKPIs">0</div>
+                </div>
+                <div class="align-self-center">
+                  <i class="material-symbols-rounded text-success" style="font-size: 2rem;">trending_up</i>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <div class="stat-label">Total Deductions</div>
+                  <div class="stat-number text-danger" id="totalLosses">0</div>
+                </div>
+                <div class="align-self-center">
+                  <i class="material-symbols-rounded text-danger" style="font-size: 2rem;">trending_down</i>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <div class="stat-label">Attendance Records</div>
+                  <div class="stat-number text-info" id="totalSessions">0</div>
+                </div>
+                <div class="align-self-center">
+                  <i class="material-symbols-rounded text-info" style="font-size: 2rem;">calendar_today</i>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <div class="stat-label">Total Students</div>
+                  <div class="stat-number text-warning" id="totalStudents">0</div>
+                </div>
+                <div class="align-self-center">
+                  <i class="material-symbols-rounded text-warning" style="font-size: 2rem;">people</i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Stats Row -->
+        <div class="row mb-4">
+          <div class="col-lg-4 col-md-6">
+            <div class="stat-card">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <div class="stat-label">Total </div>
+                  <div class="stat-number" id="totalRevenue">0</div>
+                </div>
+                <div class="align-self-center">
+                  <i class="material-symbols-rounded" style="font-size: 2rem;">account_balance_wallet</i>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="stat-card">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <div class="stat-label">Avg Students/Session</div>
+                  <div class="stat-number" id="avgStudentsPerSession">0</div>
+                </div>
+                <div class="align-self-center">
+                  <i class="material-symbols-rounded" style="font-size: 2rem;">analytics</i>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="stat-card">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <div class="stat-label">Last Session</div>
+                  <div class="stat-number" id="lastSessionDate">-</div>
+                </div>
+                <div class="align-self-center">
+                  <i class="material-symbols-rounded" style="font-size: 2rem;">schedule</i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Information Tabs -->
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="employeeTabs" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="salary-tab" data-bs-toggle="tab" data-bs-target="#salary" type="button" role="tab">
+                      <i class="material-symbols-rounded me-2">payments</i>
+                      Salary History
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="kpi-tab" data-bs-toggle="tab" data-bs-target="#kpi" type="button" role="tab">
+                      <i class="material-symbols-rounded me-2">star</i>
+                      Bonuses & Deductions
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance" type="button" role="tab">
+                      <i class="material-symbols-rounded me-2">calendar_today</i>
+                      Attendance History
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div class="tab-content" id="employeeTabContent">
+                <!-- Salary History Tab -->
+                <div class="tab-pane fade show active" id="salary" role="tabpanel">
+                  <h5 class="mb-3">Salary History</h5>
+                  <div id="salaryHistory">
+                    <!-- Salary history items will be loaded here -->
+                  </div>
+                </div>
+
+                <!-- KPI History Tab -->
+                <div class="tab-pane fade" id="kpi" role="tabpanel">
+                  <h5 class="mb-3">Bonuses & Deductions</h5>
+                  <div id="kpiHistory">
+                    <!-- KPI history items will be loaded here -->
+                  </div>
+                </div>
+
+                <!-- Attendance History Tab -->
+                <div class="tab-pane fade" id="attendance" role="tabpanel">
+                  <h5 class="mb-3">Attendance History</h5>
+                  <div id="attendanceHistory">
+                    <!-- Attendance history items will be loaded here -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Core JS Files -->
+  <script src="../assets/js/core/popper.min.js"></script>
+  <script src="../assets/js/core/bootstrap.min.js"></script>
+  <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
+  <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
+  
+  <script>
+    // Get employee ID from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const employeeId = urlParams.get('id');
+
+    if (!employeeId) {
+      alert('Employee ID not found');
+      window.location.href = '/admin/employee';
+    }
+
+    // Load employee data
+    async function loadEmployeeData() {
+      try {
+        const response = await fetch(`/admin/employee-log/${employeeId}`);
+        if (!response.ok) {
+          throw new Error('Failed to load employee data');
+        }
+
+        const data = await response.json();
+        displayEmployeeData(data);
+      } catch (error) {
+        console.error('Error loading employee data:', error);
+        alert('Error loading employee data');
+      }
+    }
+
+    function displayEmployeeData(data) {
+      // Hide loading spinner
+      document.getElementById('loadingSpinner').style.display = 'none';
+      document.getElementById('employeeContent').style.display = 'block';
+
+      // Calculate attendance statistics
+      const totalSessions = data.attendanceHistory.length;
+      const totalStudents = data.totalStudents || 0;
+      const avgStudentsPerSession = totalSessions > 0 ? (totalStudents / totalSessions).toFixed(1) : 0;
+      const lastSessionDate = totalSessions > 0 ? 
+        new Date(data.attendanceHistory[0].createdAt).toLocaleDateString('en-US') : '-';
+
+      // Update employee information
+      document.getElementById('employeeName').textContent = data.employee.employeeName;
+      document.getElementById('employeePhone').textContent = data.employee.employeePhoneNumber;
+      document.getElementById('baseSalary').textContent = formatCurrency(data.employee.employeeSalary);
+      document.getElementById('totalSalary').textContent = formatCurrency(data.employee.totalSalary || 0);
+      document.getElementById('totalKPIs').textContent = formatCurrency(data.employee.totalKPIs || 0);
+      document.getElementById('totalLosses').textContent = formatCurrency(data.employee.totalLosses || 0);
+      document.getElementById('totalSessions').textContent = totalSessions.toLocaleString('en-US');
+      document.getElementById('totalStudents').textContent = totalStudents.toLocaleString('en-US');
+      document.getElementById('totalRevenue').textContent = formatCurrency(data.totalRevenue || 0);
+      document.getElementById('avgStudentsPerSession').textContent = avgStudentsPerSession;
+      document.getElementById('lastSessionDate').textContent = lastSessionDate;
+
+      // Display salary history
+      displaySalaryHistory(data.salaryHistory);
+      
+      // Display KPI history
+      displayKPIHistory(data.kpiHistory);
+      
+      // Display attendance history
+      displayAttendanceHistory(data.attendanceHistory);
+    }
+
+    function displaySalaryHistory(salaryHistory) {
+      const container = document.getElementById('salaryHistory');
+      container.innerHTML = '';
+
+      if (salaryHistory.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="material-symbols-rounded">payments</i>
+            <p>No salary records found</p>
+          </div>
+        `;
+        return;
+      }
+
+      salaryHistory.forEach(salary => {
+        const item = document.createElement('div');
+        item.className = 'history-item salary-item';
+        item.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-1">${salary.billName}</h6>
+              <p class="mb-0 text-muted">${new Date(salary.createdAt).toLocaleDateString('en-US')}</p>
+              <small class="text-muted">${salary.billNote || 'لا توجد ملاحظات'}</small>
+            </div>
+            <div class="text-end">
+              <h5 class="mb-0 text-success">${formatCurrency(salary.billAmount)}</h5>
+            </div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function displayKPIHistory(kpiHistory) {
+      const container = document.getElementById('kpiHistory');
+      container.innerHTML = '';
+
+      if (kpiHistory.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="material-symbols-rounded">star</i>
+            <p>No bonus or deduction records found</p>
+          </div>
+        `;
+        return;
+      }
+
+      kpiHistory.forEach(kpi => {
+        const item = document.createElement('div');
+        item.className = 'history-item kpi-item';
+        item.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-1">${kpi.kpiName}</h6>
+              <p class="mb-0 text-muted">${new Date(kpi.createdAt).toLocaleDateString('en-US')}</p>
+              <small class="text-muted">${kpi.kpiNote || 'لا توجد ملاحظات'}</small>
+            </div>
+            <div class="text-end">
+              <h5 class="mb-0 text-success">+${formatCurrency(kpi.kpi)}</h5>
+            </div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function displayAttendanceHistory(attendanceHistory) {
+      const container = document.getElementById('attendanceHistory');
+      container.innerHTML = '';
+
+      if (attendanceHistory.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="material-symbols-rounded">calendar_today</i>
+            <p>No attendance records found</p>
+          </div>
+        `;
+        return;
+      }
+
+      attendanceHistory.forEach(attendance => {
+        const studentCount = attendance.studentsPresent ? attendance.studentsPresent.length : 0;
+        const totalRevenue = attendance.studentsPresent ? 
+          attendance.studentsPresent.reduce((sum, student) => sum + (student.feesApplied || 0), 0) : 0;
+        const teacherName = attendance.teacher ? attendance.teacher.teacherName : 'Unknown Teacher';
+        const courseName = attendance.course || 'Unknown Course';
+
+        const item = document.createElement('div');
+        item.className = 'history-item attendance-item';
+        item.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-1">Attendance Session</h6>
+              <p class="mb-0 text-muted">${new Date(attendance.createdAt).toLocaleDateString('en-US')}</p>
+              <small class="text-muted">
+                <strong>Teacher:</strong> ${teacherName} | 
+                <strong>Course:</strong> ${courseName} | 
+                <strong>Students:</strong> ${studentCount.toLocaleString('en-US')}
+              </small>
+            </div>
+            <div class="text-end">
+              <h5 class="mb-0 text-warning">${formatCurrency(totalRevenue)}</h5>
+              <small class="text-muted">Total </small>
+            </div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'EGP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(amount);
+    }
+
+    // Load data when page loads
+    document.addEventListener('DOMContentLoaded', loadEmployeeData);
+  </script>
+
+  <!-- Control Center for Material Dashboard -->
+  <script src="../assets/js/material-dashboard.min.js?v=3.2.0"></script>
+</body>
+
+</html>

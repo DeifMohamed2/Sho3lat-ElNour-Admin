@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+    <%- include("../Admin/partials/head.ejs") %>
+<style>
+.spinner {
+   width: 56px;
+   height: 56px;
+   display: grid;
+   border: 4.5px solid #0000;
+   border-radius: 50%;
+   border-color: #dbdcef #0000;
+   animation: spinner-e04l1k 1s infinite linear;
+}
+
+.spinner::before,
+.spinner::after {
+   content: "";
+   grid-area: 1/1;
+   margin: 2.2px;
+   border: inherit;
+   border-radius: 50%;
+}
+
+.spinner::before {
+   border-color: #ff9847 #0000;
+   animation: inherit;
+   animation-duration: 0.5s;
+   animation-direction: reverse;
+}
+
+.spinner::after {
+   margin: 8.9px;
+}
+
+@keyframes spinner-e04l1k {
+   100% {
+      transform: rotate(1turn);
+   }
+}
+
+.save-changes{
+    background: linear-gradient(120deg, rgb(136, 136, 136) 30%, rgb(194, 194, 194) 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 7px 10px !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    font-size: 16px !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    transition: all ease 0.5s  !important;
+}
+
+.save-changes:hover{
+  background-color: rgba(195, 195, 195, 0.844) !important;
+  scale: 1.06 !important;
+}
+
+.table-responsive  {
+  max-height: 600px;
+  overflow: auto;
+}
+
+/* Enhanced table styles like addStudent */
+#employeeTable {
+  border-collapse: collapse;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  width: 100%;
+}
+
+#employeeTable th,
+#employeeTable td {
+  text-align: center;
+  color: black !important;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 12px 8px;
+}
+
+#employeeTable thead {
+  background-color: #fff;
+}
+
+#employeeTable thead th {
+  border-bottom: 2px solid rgba(0, 0, 0, 0.3);
+  font-weight: bold;
+  background-color: #f8f9fa;
+  border-top: 2px solid rgba(0, 0, 0, 0.3);
+}
+
+#employeeTable tbody tr {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+#employeeTable tbody tr:last-child {
+  border-bottom: none;
+}
+
+#employeeTable tbody td {
+  background-color: #fff;
+}
+
+/* Enhanced header for Employees List */
+.employees-list-header {
+  border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  padding: 20px 25px;
+  margin-bottom: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.employees-list-header h5 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Filter section */
+.filter-section {
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  margin-top: 15px;
+}
+
+.filter-label {
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+/* Enhanced search input - centered */
+.search-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 15px 0;
+}
+
+.search-wrapper {
+  max-width: 600px;
+  width: 100%;
+}
+
+#searchEmployee {
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background-color: #fff;
+  text-align: center;
+}
+
+#searchEmployee:focus {
+  border-color: rgba(0, 0, 0, 0.5);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  padding: 12px 15px;
+}
+
+.input-group #searchEmployee {
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+}
+
+/* Filter dropdowns */
+.filter-select {
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.filter-select:focus {
+  border-color: rgba(0, 0, 0, 0.5);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced table styles like addStudent */
+.edit-employee-btn {
+  background-color: #ff9847 !important;
+  color: white !important;
+  border: 1px solid transparent !important;
+  padding: 5px 10px !important;
+  border-radius: 5px !important;
+  cursor: pointer !important;
+  transition: all ease 0.3s !important;
+}
+
+.edit-employee-btn:hover {
+  scale: 1.07;
+  color: #ff9847 !important;
+  background-color: white !important;
+  border: 1px solid #ff9847 !important;
+}
+
+/* Modal styles */
+.modal-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: #f8f9fa;
+}
+
+.modal-content {
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.modal-title {
+  font-weight: 700;
+  color: #1f1f1f;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.form-control,
+.form-select {
+  border: 1.5px solid rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  box-shadow: 0 0 0 0.15rem rgba(0, 0, 0, 0.1);
+  outline: none;
+}
+
+.btn-primary {
+  background: linear-gradient(120deg, #000 0%, #444 100%);
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(120deg, #111 0%, #555 100%);
+}
+
+/* Payment/Deduction modals */
+.payments-modal-content {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.payments-modal-header {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  border-bottom: 3px solid rgba(255, 255, 255, 0.1);
+  padding: 20px 25px;
+  color: white;
+}
+
+.payments-modal-header .modal-title {
+  color: white;
+  font-size: 1.5rem;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.payments-modal-body {
+  background: linear-gradient(to bottom, #fafafa, #ffffff);
+  padding: 25px;
+  min-height: 400px;
+}
+
+.payments-modal-footer {
+  background-color: #f8f9fa;
+  border-top: 2px solid rgba(0, 0, 0, 0.1);
+  padding: 15px 25px;
+}
+
+/* Enhanced Salary Summary Cards */
+.salary-summary-card {
+  background: white;
+  border-radius: 12px;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.salary-summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: 0.3;
+}
+
+.salary-summary-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+.salary-summary-card .card-body {
+  padding: 25px 20px;
+  text-align: center;
+}
+
+.salary-summary-card .icon-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 15px;
+  background: rgba(0, 0, 0, 0.05);
+  font-size: 1.8rem;
+}
+
+.salary-summary-card.total-paid .icon-wrapper {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.salary-summary-card.total-deductions .icon-wrapper {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.salary-summary-card.total-payments .icon-wrapper {
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+}
+
+.salary-summary-card.net-amount .icon-wrapper {
+  background: rgba(255, 152, 71, 0.1);
+  color: #ff9847;
+}
+
+.salary-summary-card h6 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.salary-summary-card h4 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.salary-summary-card.total-paid h4 {
+  color: #28a745;
+}
+
+.salary-summary-card.total-deductions h4 {
+  color: #dc3545;
+}
+
+.salary-summary-card.total-payments h4 {
+  color: #007bff;
+}
+
+.salary-summary-card.net-amount h4 {
+  color: #ff9847;
+}
+
+/* Enhanced Salary History Table */
+.salary-table-wrapper {
+  background: white;
+  border-radius: 12px;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.salary-table-wrapper .table {
+  margin: 0;
+}
+
+.salary-table-wrapper thead {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.salary-table-wrapper thead th {
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #333;
+  padding: 15px 12px;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+.salary-table-wrapper tbody td {
+  padding: 15px 12px;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.salary-table-wrapper tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.salary-table-wrapper tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.salary-table-wrapper tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.empty-salary-state {
+  text-align: center;
+  padding: 80px 20px;
+  background: white;
+  border-radius: 12px;
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+.empty-salary-state .empty-icon {
+  font-size: 5rem;
+  color: #ddd;
+  margin-bottom: 20px;
+  display: block;
+  opacity: 0.5;
+}
+
+.empty-salary-state h5 {
+  color: #666;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.empty-salary-state p {
+  color: #999;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Deduction Preview Styles */
+#appliedDeductionsList {
+  min-height: 60px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#appliedDeductionsList .border-warning {
+  transition: all 0.2s ease;
+}
+
+#appliedDeductionsList .border-warning:hover {
+  transform: translateX(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Salary Calculation Preview */
+.card.border-primary,
+.card.border-warning,
+.card.border-danger {
+  transition: all 0.3s ease;
+}
+
+/* Fix modal backdrop issue */
+.modal-backdrop {
+  z-index: 1040;
+}
+
+.modal {
+  z-index: 1050;
+}
+
+body.modal-open {
+  overflow: hidden;
+  padding-right: 0 !important;
+}
+</style>
+
+<body class="g-sidenav-show rtl  bg-gray-100">
+    <%- include("../Admin/partials/aside.ejs") %>
+
+    <!-- Main content -->
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+       <!-- Edit Employee Modal -->
+    <div class="modal fade hide" id="editEmployeeModal" tabindex="-1" aria-labelledby="editEmployeeModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editEmployeeModalLabel">تعديل بيانات الموظف</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editEmployeeForm">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="editEmployeeCode" class="form-label">كود الموظف</label>
+                  <input type="text" class="form-control border border-2 p-2" id="editEmployeeCode" name="employeeCode" readonly style="background-color: #f5f5f5;">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editEmployeeName" class="form-label">اسم الموظف</label>
+                <input type="text" class="form-control border border-2 p-2" id="editEmployeeName" name="employeeName" required>
+              </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editEmployeePhone" class="form-label">رقم الهاتف</label>
+                <input type="text" class="form-control border border-2 p-2" id="editEmployeePhone" name="employeePhoneNumber" required>
+              </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editEmployeeType" class="form-label">نوع الموظف</label>
+                  <select class="form-select border border-2 p-2" id="editEmployeeType" name="employeeType" required>
+                    <option value="other">أخرى</option>
+                    <option value="teacher">مدرس</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editEmploymentType" class="form-label">نوع التوظيف</label>
+                  <select class="form-select border border-2 p-2" id="editEmploymentType" name="employmentType" required>
+                    <option value="Full-Time">دوام كامل</option>
+                    <option value="Part-Time">دوام جزئي</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3" id="editSalaryGroup">
+                  <label for="editEmployeeSalary" class="form-label">الراتب الشهري</label>
+                  <input type="number" class="form-control border border-2 p-2" id="editEmployeeSalary" name="employeeSalary" min="0" step="0.01">
+              </div>
+                <div class="col-md-6 mb-3" id="editHourlyRateGroup" style="display: none;">
+                  <label for="editHourlyRate" class="form-label">السعر بالساعة</label>
+                  <input type="number" class="form-control border border-2 p-2" id="editHourlyRate" name="hourlyRate" min="0" step="0.01">
+                </div>
+              </div>
+              <input type="hidden" id="editEmployeeId">
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+            <button type="button" class="btn btn-primary" id="saveEditEmployeeBtn">حفظ التعديلات</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Deduction Modal -->
+    <div class="modal fade" id="addDeductionModal" tabindex="-1" aria-labelledby="addDeductionModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content payments-modal-content">
+          <div class="modal-header payments-modal-header">
+            <h5 class="modal-title" id="addDeductionModalLabel">
+              <i class="material-symbols-rounded me-2" style="font-size: 24px; vertical-align: middle;">remove_circle</i>
+              إضافة خصم للموظف
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body payments-modal-body">
+            <form id="addDeductionForm">
+              <input type="hidden" id="deductionEmployeeId">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="deductionAmount" class="form-label">
+                    <i class="material-symbols-rounded me-1" style="font-size: 18px; vertical-align: middle;">attach_money</i>
+                    مبلغ الخصم *
+                  </label>
+                  <input type="number" class="form-control border border-2 p-2" id="deductionAmount" name="amount" min="0" step="0.01" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="deductionMonth" class="form-label">
+                    <i class="material-symbols-rounded me-1" style="font-size: 18px; vertical-align: middle;">calendar_month</i>
+                    الشهر المطبق عليه *
+                  </label>
+                  <input type="month" class="form-control border border-2 p-2" id="deductionMonth" name="appliedToMonth" required>
+                </div>
+                <div class="col-12 mb-3">
+                  <label for="deductionReason" class="form-label">
+                    <i class="material-symbols-rounded me-1" style="font-size: 18px; vertical-align: middle;">description</i>
+                    سبب الخصم *
+                  </label>
+                  <input type="text" class="form-control border border-2 p-2" id="deductionReason" name="reason" placeholder="مثال: تأخير في الحضور" required>
+                </div>
+                <div class="col-12 mb-3">
+                  <label for="deductionNotes" class="form-label">
+                    <i class="material-symbols-rounded me-1" style="font-size: 18px; vertical-align: middle;">note</i>
+                    ملاحظات
+                  </label>
+                  <textarea class="form-control border border-2 p-2" id="deductionNotes" name="notes" rows="3" placeholder="ملاحظات إضافية (اختياري)"></textarea>
+                </div>
+                <div class="col-12">
+                  <div class="card border-primary" style="background: linear-gradient(135deg, #fff3e0 0%, #ffffff 100%);">
+                    <div class="card-body">
+                      <h6 class="card-title mb-3">
+                        <i class="material-symbols-rounded me-2" style="font-size: 20px; vertical-align: middle;">calculate</i>
+                        معاينة الخصم
+                      </h6>
+                      <div class="row g-3">
+                        <div class="col-md-6">
+                          <small class="text-muted d-block mb-1">
+                            <i class="material-symbols-rounded" style="font-size: 14px; vertical-align: middle;">account_balance_wallet</i>
+                            الراتب الأساسي:
+                          </small>
+                          <div class="fw-bold fs-5" id="previewBaseSalary">0.00 ج.م</div>
+                        </div>
+                        <div class="col-md-6">
+                          <small class="text-muted d-block mb-1">
+                            <i class="material-symbols-rounded" style="font-size: 14px; vertical-align: middle;">remove_circle</i>
+                            إجمالي الخصومات:
+                          </small>
+                          <div class="fw-bold fs-5 text-danger" id="previewDeductionAmount">0.00 ج.م</div>
+                          <small class="text-muted" style="font-size: 0.7rem;" id="deductionBreakdown"></small>
+                        </div>
+                        <div class="col-md-12 mt-3 pt-3 border-top border-primary">
+                          <small class="text-muted d-block mb-2">
+                            <i class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">payments</i>
+                            المبلغ المستحق بعد الخصم:
+                          </small>
+                          <div class="fw-bold fs-3 text-primary" id="previewAfterDeduction">0.00 ج.م</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer payments-modal-footer">
+            <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal" style="border-radius: 8px; padding: 10px 20px;">
+              <i class="material-symbols-rounded me-2" style="font-size: 18px; vertical-align: middle;">close</i>
+              إلغاء
+            </button>
+            <button type="button" class="btn btn-danger btn-lg" id="saveDeductionBtn" style="border-radius: 8px; padding: 10px 20px; font-weight: 600;">
+              <i class="material-symbols-rounded me-1" style="font-size: 18px; vertical-align: middle;">save</i>
+              حفظ الخصم
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Salary History Modal -->
+    <div class="modal fade" id="viewSalaryHistoryModal" tabindex="-1" aria-labelledby="viewSalaryHistoryModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content payments-modal-content">
+          <div class="modal-header payments-modal-header">
+            <h5 class="modal-title" id="viewSalaryHistoryModalLabel">سجل الرواتب</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body payments-modal-body">
+            <div id="salarySummary" class="mb-4"></div>
+            <div class="mb-4 text-end">
+              <button type="button" class="btn btn-primary btn-lg shadow-sm" id="addPaymentBtn" style="border-radius: 10px; padding: 12px 28px; font-weight: 600;">
+                <i class="material-symbols-rounded me-2" style="font-size: 20px; vertical-align: middle;">add_circle</i>
+                دفع راتب شهري
+              </button>
+            </div>
+            <div id="salaryHistoryTable"></div>
+          </div>
+          <div class="modal-footer payments-modal-footer">
+            <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal" style="border-radius: 8px; padding: 10px 20px;">
+              <i class="material-symbols-rounded me-2" style="font-size: 18px; vertical-align: middle;">close</i>
+              إغلاق
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pay Monthly Salary Modal -->
+    <div class="modal fade" id="paySalaryModal" tabindex="-1" aria-labelledby="paySalaryModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header bg-gradient-dark text-white">
+            <h5 class="modal-title" id="paySalaryModalLabel">دفع راتب شهري</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="paySalaryForm">
+              <input type="hidden" id="paymentEmployeeId">
+              <input type="hidden" id="currentPaymentId">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="paymentMonth" class="form-label">الشهر</label>
+                  <input type="month" class="form-control border border-2 p-2" id="paymentMonth" name="paymentMonth" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="paymentDate" class="form-label">تاريخ الدفع</label>
+                  <input type="date" class="form-control border border-2 p-2" id="paymentDate" name="paymentDate" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="baseSalary" class="form-label">الراتب الأساسي</label>
+                  <input type="number" class="form-control border border-2 p-2" id="baseSalary" name="baseSalary" min="0" step="0.01" required>
+                </div>
+                <div class="col-md-6 mb-3" id="hoursWorkedGroup" style="display: none;">
+                  <label for="hoursWorked" class="form-label">عدد الساعات</label>
+                  <input type="number" class="form-control border border-2 p-2" id="hoursWorked" name="hoursWorked" min="0" step="0.01">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="bonuses" class="form-label">المكافآت</label>
+                  <input type="number" class="form-control border border-2 p-2" id="bonuses" name="bonuses" min="0" step="0.01" value="0">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="extras" class="form-label">إضافات</label>
+                  <input type="number" class="form-control border border-2 p-2" id="extras" name="extras" min="0" step="0.01" value="0">
+                </div>
+                <div class="col-12 mb-3">
+                  <label class="form-label">
+                    <i class="material-symbols-rounded me-1" style="font-size: 18px; vertical-align: middle;">remove_circle</i>
+                    الخصومات المطبقة
+                  </label>
+                  <div id="appliedDeductionsList" class="border border-2 rounded p-3 mb-2" style="background-color: #fff3cd; min-height: 60px;">
+                    <div class="text-muted text-center" id="noDeductionsMessage">
+                      <i class="material-symbols-rounded" style="font-size: 24px; opacity: 0.5;">info</i>
+                      <div>لا توجد خصومات مطبقة على هذا الشهر</div>
+                    </div>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mt-2">
+                    <label for="deductions" class="form-label mb-0">إجمالي الخصومات:</label>
+                    <input type="number" class="form-control border border-2 p-2 text-end" id="deductions" name="deductions" min="0" step="0.01" value="0" readonly style="max-width: 200px; background-color: #f8f9fa;">
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="paymentMethod" class="form-label">
+                    <i class="material-symbols-rounded me-1" style="font-size: 18px; vertical-align: middle;">payment</i>
+                    طريقة الدفع *
+                  </label>
+                  <select class="form-select border border-2 p-2" id="paymentMethod" name="paymentMethod" required>
+                    <option value="cash">نقدي</option>
+                    <option value="bank_transfer">تحويل بنكي</option>
+                    <option value="check">شيك</option>
+                    <option value="other">أخرى</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="receiptNumber" class="form-label">
+                    <i class="material-symbols-rounded me-1" style="font-size: 18px; vertical-align: middle;">receipt</i>
+                    رقم الإيصال
+                  </label>
+                  <input type="text" class="form-control border border-2 p-2" id="receiptNumber" name="receiptNumber" placeholder="اختياري">
+                </div>
+                <div class="col-12 mb-3">
+                  <label for="paymentNotes" class="form-label">
+                    <i class="material-symbols-rounded me-1" style="font-size: 18px; vertical-align: middle;">note</i>
+                    ملاحظات
+                  </label>
+                  <textarea class="form-control border border-2 p-2" id="paymentNotes" name="notes" rows="3" placeholder="ملاحظات إضافية (اختياري)"></textarea>
+                </div>
+                <div class="col-12">
+                  <div class="card border-primary" style="background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);">
+                    <div class="card-body">
+                      <h6 class="card-title mb-3">
+                        <i class="material-symbols-rounded me-2" style="font-size: 20px; vertical-align: middle;">calculate</i>
+                        ملخص الحساب
+                      </h6>
+                      <div class="row g-2">
+                        <div class="col-6">
+                          <small class="text-muted d-block">الراتب الأساسي:</small>
+                          <div class="fw-bold" id="previewBase">0.00 ج.م</div>
+                        </div>
+                        <div class="col-6">
+                          <small class="text-muted d-block">المكافآت:</small>
+                          <div class="fw-bold text-success" id="previewBonuses">0.00 ج.م</div>
+                        </div>
+                        <div class="col-6">
+                          <small class="text-muted d-block">الإضافات:</small>
+                          <div class="fw-bold text-info" id="previewExtras">0.00 ج.م</div>
+                        </div>
+                        <div class="col-6">
+                          <small class="text-muted d-block">الخصومات:</small>
+                          <div class="fw-bold text-danger" id="previewDeductions">0.00 ج.م</div>
+                        </div>
+                        <div class="col-12 mt-2 pt-2 border-top border-primary">
+                          <small class="text-muted d-block">المبلغ الإجمالي المستحق:</small>
+                          <div class="fw-bold fs-4 text-primary" id="totalAmountPreview">0.00 ج.م</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+            <button type="button" class="btn btn-primary" id="savePaymentBtn">حفظ الدفع</button>
+          </div>
+        </div>
+      </div>
+    </div>
+   
+    <!-- Navbar -->
+    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 shadow-none border-radius-xl" id="navbarBlur" data-scroll="true">
+      <div class="container-fluid pt-1 px-3">
+        <h4>إدارة الموظفين <i class="material-symbols-rounded opacity-10">people</i> </h4>
+      </div>
+    </nav>
+    <!-- End Navbar -->
+    <div class="container-fluid py-2">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="row">
+            <div class="col-md-12 mb-lg-0 mb-4">
+              <form id="addEmployeeForm">
+                <div class="card mt-4">
+                  <div class="card-header pb-0 p-3">
+                    <div class="row">
+                      <div class="col-6 d-flex align-items-center">
+                        <h5 class="mb-0">إضافة موظف جديد</h5>
+                      </div>
+                      <div class="col-6 text-start">
+                        <button type="submit" class="btn bg-gradient-dark mb-0" id="addNewEmployeeBtn"><i class="material-symbols-rounded text-sm">add</i>&nbsp;&nbsp;إضافة</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-body p-3">
+                    <div class="row">
+                      <div class="col-md-3">
+                          <div class="input-group mb-3 border border-2 rounded">
+                              <input type="text" class="form-control p-2 fs-5" placeholder="اسم الموظف" id="employeeName" name="employeeName" required>
+                          </div> 
+                      </div>
+                      
+                      <div class="col-md-3">
+                          <div class="input-group mb-3 border border-2 rounded">
+                              <input type="number" class="form-control p-2 fs-5" placeholder="رقم الهاتف" id="employeePhoneNumber" name="employeePhoneNumber" required >
+                          </div>
+                      </div>
+
+                      <div class="col-md-3">
+                          <select class="form-select border border-2 rounded text-center p-2" id="employeeType" name="employeeType" required>
+                            <option value="">نوع الموظف</option>
+                            <option value="teacher">مدرس</option>
+                            <option value="other">أخرى</option>
+                          </select>
+                      </div>
+
+                      <div class="col-md-3">
+                          <select class="form-select border border-2 rounded text-center p-2" id="employmentType" name="employmentType" required>
+                            <option value="">نوع التوظيف</option>
+                            <option value="Full-Time">دوام كامل</option>
+                            <option value="Part-Time">دوام جزئي</option>
+                          </select>
+                      </div>
+
+                      <div class="col-md-3" id="salaryGroup">
+                          <div class="input-group mb-3 border border-2 rounded">
+                              <input type="number" class="form-control p-2 fs-5" placeholder="الراتب الشهري" id="employeeSalary" name="employeeSalary" min="0" step="0.01">
+                          </div>
+                      </div>
+
+                      <div class="col-md-3" id="hourlyRateGroup" style="display: none;">
+                          <div class="input-group mb-3 border border-2 rounded">
+                              <input type="number" class="form-control p-2 fs-5" placeholder="السعر بالساعة" id="hourlyRate" name="hourlyRate" min="0" step="0.01">
+                          </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="spinner" class="spinner mx-auto d-none"></div>
+
+                  <div class="col-md-4">
+                      <div class="alert alert-success" role="alert" id="successMessage" style="display: none;" >
+                          تم إضافة الموظف بنجاح
+                      </div>
+                      <div class="alert alert-danger" role="alert" id="errorMessage" style="display: none;" >
+                          
+                      </div>
+                  </div>
+                </div>
+              </form>
+       
+            </div>
+          
+          </div>
+        </div>
+     
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <div class="card my-4">
+            <div class="card-header employees-list-header">
+              <div class="row">
+                <div class="col-12 text-center mb-3">
+                  <h5 class="mb-0">قائمة الموظفين</h5>
+                </div>
+              </div>
+              
+              <!-- Centered Search -->
+              <div class="search-container">
+                <div class="search-wrapper">
+                  <div class="input-group">
+                    <input type="text" class="form-control" placeholder="البحث في جميع البيانات..." id="searchEmployee">
+                    <span class="input-group-text"><i class="material-symbols-rounded">search</i></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Filter Section -->
+              <div class="filter-section">
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <label class="filter-label">تصفية حسب نوع الموظف</label>
+                    <select class="form-select filter-select" id="filterEmployeeType">
+                      <option value="">جميع الأنواع</option>
+                      <option value="teacher">مدرس</option>
+                      <option value="other">أخرى</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="filter-label">تصفية حسب نوع التوظيف</label>
+                    <select class="form-select filter-select" id="filterEmploymentType">
+                      <option value="">جميع الأنواع</option>
+                      <option value="Full-Time">دوام كامل</option>
+                      <option value="Part-Time">دوام جزئي</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="filter-label">إجراءات</label>
+                    <button type="button" class="btn btn-outline-dark w-100 filter-select" id="clearFilters" style="padding: 10px 15px;">
+                      <i class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">clear_all</i>
+                      مسح الفلاتر
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body p-3">
+              <div class="table-responsive">
+                <table class="table align-items-center mb-0" id="employeeTable">
+                  <thead>
+                    <tr>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">كود الموظف</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">اسم الموظف</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">رقم الهاتف</th>
+                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">نوع الموظف</th>
+                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">نوع التوظيف</th>
+                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">الراتب/السعر</th>
+                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody id="employeeTableBody">
+        
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!--   Core JS Files   -->
+  <script src="/js/adminJS/employee.js"></script>
+  <script src="../assets/js/core/popper.min.js"></script>
+  <script src="../assets/js/core/bootstrap.min.js"></script>
+  <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
+  <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
+
+  <script>
+    var win = navigator.platform.indexOf('Win') > -1;
+    if (win && document.querySelector('#sidenav-scrollbar')) {
+      var options = {
+        damping: '0.5'
+      }
+      Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+    }
+  </script>
+  <!-- Github buttons -->
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+  <!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
+  <script src="../assets/js/material-dashboard.min.js?v=3.2.0"></script>
+</body>
+
+</html>

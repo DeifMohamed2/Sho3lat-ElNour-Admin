@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <%- include("../Admin/partials/head.ejs") %>
+  
+  <style>
+    /* Professional Dashboard Styles - Subtle Colors */
+    .main-content {
+      margin-right: 260px !important;
+      transition: margin-right 0.3s ease;
+    }
+    
+    @media (max-width: 1200px) {
+      .main-content {
+        margin-right: 0 !important;
+      }
+    }
+    
+    .dashboard-card {
+      border-radius: 12px;
+      border: 1px solid #e9ecef;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+      overflow: hidden;
+      position: relative;
+      background: white;
+    }
+    
+    .dashboard-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    .metric-card {
+      background: #ffffff;
+      color: #212529;
+      border-radius: 12px;
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #e9ecef;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+    
+    .metric-card.revenue { 
+      border-right: 4px solid #22c55e;
+    }
+    .metric-card.expenses { 
+      border-right: 4px solid #ef4444;
+    }
+    .metric-card.profit { 
+      border-right: 4px solid #3b82f6;
+    }
+    .metric-card.students { 
+      border-right: 4px solid #8b5cf6;
+    }
+    .metric-card.attendance { 
+      border-right: 4px solid #06b6d4;
+    }
+    .metric-card.outstanding { 
+      border-right: 4px solid #f59e0b;
+    }
+    
+    .metric-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      background: #f8f9fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 12px;
+      color: #495057;
+    }
+    
+    .metric-card.revenue .metric-icon { 
+      background: rgba(34, 197, 94, 0.1);
+      color: #22c55e;
+    }
+    .metric-card.expenses .metric-icon { 
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+    .metric-card.profit .metric-icon { 
+      background: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+    }
+    .metric-card.students .metric-icon { 
+      background: rgba(139, 92, 246, 0.1);
+      color: #8b5cf6;
+    }
+    .metric-card.attendance .metric-icon { 
+      background: rgba(6, 182, 212, 0.1);
+      color: #06b6d4;
+    }
+    .metric-card.outstanding .metric-icon { 
+      background: rgba(245, 158, 11, 0.1);
+      color: #f59e0b;
+    }
+    
+    .metric-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 8px 0;
+      line-height: 1.2;
+      color: #212529;
+    }
+    
+    .metric-label {
+      font-size: 0.85rem;
+      color: #6c757d;
+      font-weight: 500;
+    }
+    
+    .metric-change {
+      font-size: 0.8rem;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .metric-change.positive { color: #22c55e; }
+    .metric-change.negative { color: #ef4444; }
+    
+    .chart-container {
+      position: relative;
+      height: 300px;
+      padding: 15px;
+    }
+    
+    .filter-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 25px;
+    }
+    
+    .stat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .stat-badge.success { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+    .stat-badge.warning { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
+    .stat-badge.danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .stat-badge.info { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    
+    .progress-ring {
+      transform: rotate(-90deg);
+    }
+    
+    .progress-ring-circle {
+      transition: stroke-dashoffset 0.35s;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+    
+    .table-modern {
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    
+    .table-modern thead th {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border: none;
+      padding: 15px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #495057;
+    }
+    
+    .table-modern tbody tr {
+      transition: all 0.2s ease;
+    }
+    
+    .table-modern tbody tr:hover {
+      background-color: #f8f9fa;
+      transform: scale(1.01);
+    }
+    
+    .table-modern tbody td {
+      padding: 15px;
+      border-bottom: 1px solid #e9ecef;
+      vertical-align: middle;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(5px);
+    }
+    
+    .spinner-modern {
+      width: 60px;
+      height: 60px;
+      border: 4px solid #f3f4f6;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .export-btn {
+      background: #6c757d;
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    
+    .export-btn:hover {
+      background: #5a6268;
+      transform: translateY(-1px);
+    }
+    
+    .container-fluid {
+      padding-right: 20px;
+      padding-left: 20px;
+    }
+    
+    @media (min-width: 1200px) {
+      .main-content {
+        margin-right: 260px;
+      }
+    }
+    
+    .trend-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    .trend-up { color: #22c55e; }
+    .trend-down { color: #ef4444; }
+    .trend-neutral { color: #6b7280; }
+  </style>
+
+<body class="g-sidenav-show rtl bg-gray-100">
+  <%- include("../Admin/partials/aside.ejs") %>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="text-center">
+      <div class="spinner-modern mx-auto"></div>
+      <p class="mt-3 text-dark font-weight-bold">جاري تحميل البيانات...</p>
+    </div>
+  </div>
+
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg overflow-x-hidden">
+    <!-- Enhanced Navbar -->
+    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 shadow-none border-radius-xl" id="navbarBlur">
+      <div class="container-fluid py-1 px-3">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0">
+            <li class="breadcrumb-item text-sm ps-2">
+              <a class="opacity-5 text-dark" href="javascript:;">لوحات القيادة</a>
+            </li>
+            <li class="breadcrumb-item text-sm text-dark active" aria-current="page">لوحة التحكم</li>
+          </ol>
+          <h6 class="font-weight-bolder mb-0">
+            <i class="material-symbols-rounded me-2" style="vertical-align: middle;">dashboard</i>
+            لوحة التحكم الإدارية
+          </h6>
+        </nav>
+        <div class="collapse navbar-collapse mt-sm-0 mt-2 px-0" id="navbar">
+          <div class="ms-md-auto pe-md-3 d-flex align-items-center gap-3">
+            <button class="btn btn-sm btn-outline-primary export-btn" onclick="exportDashboard()" id="exportBtn">
+              <i class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">download</i>
+              تصدير التقرير
+            </button>
+            <button class="btn btn-sm btn-primary" onclick="updateDashboard()" id="refreshBtn">
+              <i class="material-symbols-rounded" id="refreshIcon" style="font-size: 18px; vertical-align: middle;">refresh</i>
+              تحديث
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+      <!-- Enhanced Filter Controls -->
+      <div class="filter-card">
+        <div class="row align-items-end g-3">
+          <div class="col-md-3">
+            <label class="form-label fw-bold mb-2">
+              <i class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">calendar_today</i>
+              الفترة الزمنية
+            </label>
+            <select class="form-select form-select-lg" id="periodFilter">
+              <option value="today">اليوم</option>
+              <option value="week">هذا الأسبوع</option>
+              <option value="month" selected>هذا الشهر</option>
+              <option value="year">هذا العام</option>
+              <option value="custom">مخصص</option>
+            </select>
+          </div>
+          <div class="col-md-3" id="customDateRange" style="display: none;">
+            <label class="form-label fw-bold mb-2">من تاريخ</label>
+            <input type="date" class="form-control form-control-lg" id="startDate">
+          </div>
+          <div class="col-md-3" id="customDateRange2" style="display: none;">
+            <label class="form-label fw-bold mb-2">إلى تاريخ</label>
+            <input type="date" class="form-control form-control-lg" id="endDate">
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-primary btn-lg w-100" id="updateBtn" onclick="updateDashboard()">
+              <i class="material-symbols-rounded" id="updateIcon" style="font-size: 20px; vertical-align: middle;">refresh</i>
+              <span id="updateText">تحديث البيانات</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Metrics Cards - Smaller Size -->
+      <div class="row g-3 mb-4" id="metricsRow">
+        <!-- Metrics will be loaded here -->
+      </div>
+
+      <!-- Charts Row -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <div class="dashboard-card card">
+            <div class="card-header bg-transparent border-0 pb-0 pt-3 px-4">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h5 class="mb-1 fw-bold">تحليل الإيرادات والمصروفات الشهري</h5>
+                  <p class="text-muted mb-0 small">آخر 12 شهر</p>
+                </div>
+                <div class="btn-group btn-group-sm" role="group">
+                  <button type="button" class="btn btn-outline-primary active" onclick="switchChartView('monthly')">شهري</button>
+                  <button type="button" class="btn btn-outline-primary" onclick="switchChartView('weekly')">أسبوعي</button>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="monthlyChart" class="chart-canvas"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-4">
+          <div class="dashboard-card card">
+            <div class="card-header bg-transparent border-0 pb-0 pt-3 px-4">
+              <h5 class="mb-1 fw-bold">توزيع المصروفات</h5>
+              <p class="text-muted mb-0 small">حسب الفئات</p>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="expenseChart" class="chart-canvas"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenue Distribution Row -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+          <div class="dashboard-card card">
+            <div class="card-header bg-transparent border-0 pb-0 pt-3 px-4">
+              <h5 class="mb-1 fw-bold">توزيع الإيرادات</h5>
+              <p class="text-muted mb-0 small">حسب المصدر</p>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="revenueDistributionChart" class="chart-canvas"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-6">
+          <div class="dashboard-card card">
+            <div class="card-header bg-transparent border-0 pb-0 pt-3 px-4">
+              <h5 class="mb-1 fw-bold">تفاصيل توزيع الإيرادات</h5>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                  <thead>
+                    <tr>
+                      <th>المصدر</th>
+                      <th class="text-center">المبلغ</th>
+                      <th class="text-center">النسبة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="revenueBreakdown">
+                    <!-- Revenue breakdown will be loaded here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Teacher Performance & Expense Breakdown -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <div class="dashboard-card card">
+            <div class="card-header bg-transparent border-0 pb-0 pt-3 px-4">
+              <h5 class="mb-1 fw-bold">
+                <i class="material-symbols-rounded me-2" style="font-size: 20px; vertical-align: middle;">emoji_events</i>
+                ترتيب المعلمين حسب الإيرادات
+              </h5>
+              <p class="text-muted mb-0 small">أفضل المعلمين المساهمين في إيرادات المركز</p>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                  <thead>
+                    <tr>
+                      <th>الترتيب</th>
+                      <th>المعلم</th>
+                      <th class="text-center">رسوم المركز</th>
+                      <th class="text-center">فواتير المعلم</th>
+                      <th class="text-center">صافي الربح</th>
+                      <th class="text-center">النسبة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="teacherPerformance">
+                    <!-- Teacher performance will be loaded here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-4">
+          <div class="dashboard-card card">
+            <div class="card-header bg-transparent border-0 pb-0 pt-3 px-4">
+              <h5 class="mb-1 fw-bold">
+                <i class="material-symbols-rounded me-2" style="font-size: 20px; vertical-align: middle;">pie_chart</i>
+                تفاصيل المصروفات
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                <table class="table table-modern mb-0">
+                  <thead>
+                    <tr>
+                      <th>الفئة</th>
+                      <th class="text-center">المبلغ</th>
+                      <th class="text-center">النسبة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="expenseBreakdown">
+                    <!-- Expense breakdown will be loaded here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly Analysis -->
+      <div class="row g-4 mb-4">
+        <div class="col-12">
+          <div class="dashboard-card card">
+            <div class="card-header bg-transparent border-0 pb-0 pt-3 px-4">
+              <h5 class="mb-1 fw-bold">التحليل الأسبوعي</h5>
+              <p class="text-muted mb-0 small">تحليل الإيرادات والمصروفات أسبوعياً</p>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="weeklyChart" class="chart-canvas"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Core JS Files -->
+  <script src="../assets/js/core/popper.min.js"></script>
+  <script src="../assets/js/core/bootstrap.min.js"></script>
+  <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
+  <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
+  <script src="../assets/js/plugins/chartjs.min.js"></script>
+  
+  <!-- Dashboard JavaScript -->
+  <script src="/js/adminJS/dashboard.js"></script>
+  
+  <script>
+    var win = navigator.platform.indexOf('Win') > -1;
+    if (win && document.querySelector('#sidenav-scrollbar')) {
+      var options = { damping: '0.5' };
+      Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+    }
+  </script>
+  <script src="../assets/js/material-dashboard.min.js?v=3.2.0"></script>
+</body>
+</html>
