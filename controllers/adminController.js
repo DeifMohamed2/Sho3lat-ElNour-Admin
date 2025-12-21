@@ -3543,11 +3543,8 @@ const employeeAttendanceDashboard_Get = async (req, res) => {
 
     // Apply tab filter
     if (tab === 'present') {
-      // Show records with checkInTime (Present or Late status)
-      query.$or = [
-        { status: 'Present', checkInTime: { $exists: true, $ne: null } },
-        { status: 'Late', checkInTime: { $exists: true, $ne: null } }
-      ];
+      // Show records with Present or Late status (even if checkInTime is null - handle edge cases)
+      query.status = { $in: ['Present', 'Late'] };
     } else if (tab === 'absent') {
       query.$or = [
         { status: 'Absent' },
@@ -3566,7 +3563,21 @@ const employeeAttendanceDashboard_Get = async (req, res) => {
         'employee',
         'employeeName employeeCode employeeType employeePhoneNumber'
       )
-      .sort({ status: 1, 'employee.employeeName': 1 });
+      .sort({ status: 1, 'employee.employeeName': 1 })
+      .lean(); // Convert to plain objects for easier manipulation
+
+    // Normalize data: if checkInTime is null but checkOutTime exists, use checkOutTime as checkInTime for display
+    attendance = attendance.map(att => {
+      if (!att.checkInTime && att.checkOutTime) {
+        // Create a normalized version for display (don't modify the actual document)
+        att.checkInTime = att.checkOutTime;
+        // Recalculate totalHours as 0 since both times are the same
+        if (!att.totalHours || att.totalHours === 0) {
+          att.totalHours = 0;
+        }
+      }
+      return att;
+    });
 
     // Apply employee type filter on populated data
     if (employeeType) {
@@ -3624,10 +3635,8 @@ const exportEmployeeAttendanceDashboard = async (req, res) => {
     }
 
     if (tab === 'present') {
-      query.$or = [
-        { status: 'Present', checkInTime: { $exists: true, $ne: null } },
-        { status: 'Late', checkInTime: { $exists: true, $ne: null } }
-      ];
+      // Show records with Present or Late status (even if checkInTime is null)
+      query.status = { $in: ['Present', 'Late'] };
     } else if (tab === 'absent') {
       query.$or = [
         { status: 'Absent' },

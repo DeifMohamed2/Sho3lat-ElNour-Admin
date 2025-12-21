@@ -713,7 +713,8 @@
     // Render present employees
     function renderPresentTable() {
       const tbody = document.getElementById('presentTableBody');
-      const present = filteredData.filter(a => (a.status === 'Present' || a.status === 'Late') && a.checkInTime);
+      // Include records with Present or Late status (checkInTime may be null for edge cases)
+      const present = filteredData.filter(a => (a.status === 'Present' || a.status === 'Late'));
 
       if (present.length === 0) {
         tbody.innerHTML = '<tr><td colspan="10" class="text-center py-5 text-muted">لا توجد بيانات</td></tr>';
