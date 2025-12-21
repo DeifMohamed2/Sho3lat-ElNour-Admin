@@ -300,6 +300,58 @@
       color: #000;
       margin: 5px 0 0 0;
     }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn-action {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .btn-view {
+      background-color: #0d6efd;
+      color: white;
+    }
+
+    .btn-view:hover {
+      background-color: #0b5ed7;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+    }
+
+    .btn-delete {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .btn-delete:hover {
+      background-color: #bb2d3b;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-action i {
+      font-size: 18px;
+      margin-left: 4px;
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 0.8rem;
+    }
   </style>
 </head>
 
@@ -641,7 +693,7 @@
       }
 
       tbody.innerHTML = present.map((att, index) => `
-                <tr>
+                <tr id="attendance-row-${att._id}">
                     <td class="text-center">${index + 1}</td>
                     <td>
                         <div class="d-flex align-items-center">
@@ -670,12 +722,14 @@
                     <td><span class="badge">${(att.totalHours || 0).toFixed(1)}س</span></td>
                     <td><span class="status-badge status-${att.status.toLowerCase()}">${getStatusText(att.status)}</span></td>
                     <td>
-                        <button class="btn btn-sm btn-primary me-1" onclick="viewEmployeeDetails('${att.employee?._id}')" style="padding: 5px 10px;">
-                            <i class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">visibility</i>
-                        </button>
-                        <button class="btn btn-sm btn-secondary" onclick="viewScans('${att._id}')" style="padding: 5px 10px;">
-                            <i class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">history</i>
-                        </button>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-view btn-sm" onclick="viewEmployeeDetails('${att.employee?._id}')" title="عرض التفاصيل">
+                                <i class="material-symbols-rounded">visibility</i>
+                            </button>
+                            <button class="btn-action btn-delete btn-sm" onclick="deleteEmployeeAttendance('${att._id}', '${att.employee?.employeeName || 'هذا السجل'}')" title="حذف السجل">
+                                <i class="material-symbols-rounded">delete</i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -692,7 +746,7 @@
       }
 
       tbody.innerHTML = absent.map((att, index) => `
-                <tr>
+                <tr id="attendance-row-${att._id}">
                     <td class="text-center">${index + 1}</td>
                     <td>
                         <div class="d-flex align-items-center">
@@ -706,12 +760,14 @@
                     <td><span class="badge">${getEmployeeType(att.employee?.employeeType)}</span></td>
                     <td>${att.employee?.employeePhoneNumber || 'غير متوفر'}</td>
                     <td>
-                        <button class="btn btn-sm btn-secondary me-1" onclick="contactEmployee('${att.employee?._id}')" style="padding: 5px 10px;">
-                            <i class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">phone</i>
-                        </button>
-                        <button class="btn btn-sm btn-primary" onclick="viewEmployeeDetails('${att.employee?._id}')" style="padding: 5px 10px;">
-                            <i class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">visibility</i>
-                        </button>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-view btn-sm" onclick="viewEmployeeDetails('${att.employee?._id}')" title="عرض التفاصيل">
+                                <i class="material-symbols-rounded">visibility</i>
+                            </button>
+                            <button class="btn-action btn-delete btn-sm" onclick="deleteEmployeeAttendance('${att._id}', '${att.employee?.employeeName || 'هذا السجل'}')" title="حذف السجل">
+                                <i class="material-symbols-rounded">delete</i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -728,7 +784,7 @@
       }
 
       tbody.innerHTML = departed.map((att, index) => `
-                <tr>
+                <tr id="attendance-row-${att._id}">
                     <td class="text-center">${index + 1}</td>
                     <td>
                         <div class="d-flex align-items-center">
@@ -754,12 +810,14 @@
                     </td>
                     <td><span class="badge">${(att.totalHours || 0).toFixed(1)}س</span></td>
                     <td>
-                        <button class="btn btn-sm btn-primary me-1" onclick="viewEmployeeDetails('${att.employee?._id}')" style="padding: 5px 10px;">
-                            <i class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">visibility</i>
-                        </button>
-                        <button class="btn btn-sm btn-secondary" onclick="viewScans('${att._id}')" style="padding: 5px 10px;">
-                            <i class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">history</i>
-                        </button>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-view btn-sm" onclick="viewEmployeeDetails('${att.employee?._id}')" title="عرض التفاصيل">
+                                <i class="material-symbols-rounded">visibility</i>
+                            </button>
+                            <button class="btn-action btn-delete btn-sm" onclick="deleteEmployeeAttendance('${att._id}', '${att.employee?.employeeName || 'هذا السجل'}')" title="حذف السجل">
+                                <i class="material-symbols-rounded">delete</i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -834,6 +892,61 @@
 
     function contactEmployee(employeeId) {
       showNotification('سيتم التواصل مع الموظف قريباً', 'info');
+    }
+
+    // Delete employee attendance record
+    async function deleteEmployeeAttendance(attendanceId, employeeName) {
+      if (!confirm(`هل أنت متأكد من حذف سجل الحضور للموظف "${employeeName}"؟\n\n⚠️ تحذير: لا يمكن التراجع عن هذا الإجراء!`)) {
+        return;
+      }
+
+      try {
+        const response = await axios.delete(`/admin/attendance/employee/${attendanceId}`);
+        
+        if (response.data.success) {
+          // Remove the row from table with animation
+          const row = document.getElementById(`attendance-row-${attendanceId}`);
+          if (row) {
+            row.style.transition = 'opacity 0.3s ease';
+            row.style.opacity = '0';
+            setTimeout(() => {
+              row.remove();
+              
+              // Check if table is empty and update statistics
+              const tbody = row.closest('tbody');
+              if (tbody && tbody.children.length === 0) {
+                const tableId = tbody.id;
+                if (tableId === 'presentTableBody') {
+                  tbody.innerHTML = '<tr><td colspan="10" class="text-center py-5 text-muted">لا توجد بيانات</td></tr>';
+                } else if (tableId === 'absentTableBody') {
+                  tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">لا توجد بيانات</td></tr>';
+                } else if (tableId === 'departedTableBody') {
+                  tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5 text-muted">لا توجد بيانات</td></tr>';
+                }
+              }
+              
+              // Reload data to refresh statistics and renumber rows
+              loadAttendanceData();
+            }, 300);
+          } else {
+            // If row not found, just reload
+            loadAttendanceData();
+          }
+          
+          showNotification('✅ تم حذف سجل الحضور بنجاح', 'success');
+        } else {
+          showNotification('❌ حدث خطأ أثناء حذف السجل', 'danger');
+        }
+      } catch (error) {
+        console.error('Error deleting employee attendance:', error);
+        if (error.response && error.response.status === 404) {
+          showNotification('❌ لم يتم العثور على السجل', 'danger');
+        } else if (error.response && error.response.status === 401) {
+          showNotification('❌ غير مصرح لك بحذف هذا السجل', 'danger');
+        } else {
+          showNotification('❌ حدث خطأ أثناء حذف السجل: ' + (error.response?.data?.error || error.message), 'danger');
+        }
+      }
     }
 
     function exportToExcel() {

@@ -324,6 +324,18 @@ router.delete(
 // ========== AUTOMATED ATTENDANCE SYSTEM ROUTES ========== //
 // Note: ZKTeco ID assignment routes removed - system now uses studentCode/employeeCode directly
 
+// Attendance Delete Routes (Hard Delete)
+router.delete(
+  '/attendance/student/:attendanceId',
+  authMiddleware,
+  adminController.deleteStudentAttendance
+);
+router.delete(
+  '/attendance/employee/:attendanceId',
+  authMiddleware,
+  adminController.deleteEmployeeAttendance
+);
+
 // Daily Class Attendance Reports
 router.get(
   '/daily-class-attendance',

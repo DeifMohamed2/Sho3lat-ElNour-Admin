@@ -277,6 +277,58 @@
       color: #000;
       margin: 5px 0 0 0;
     }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn-action {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .btn-view {
+      background-color: #0d6efd;
+      color: white;
+    }
+
+    .btn-view:hover {
+      background-color: #0b5ed7;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+    }
+
+    .btn-delete {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .btn-delete:hover {
+      background-color: #bb2d3b;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-action i {
+      font-size: 18px;
+      margin-left: 4px;
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 0.8rem;
+    }
   </style>
 </head>
 
@@ -627,9 +679,14 @@
                     <td><span class="status-badge status-${att.status.toLowerCase()}">${getStatusText(att.status)}</span></td>
                     <td><i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">fingerprint</i>${att.verifyMethod || 'Face Recognition'}</td>
                     <td>
-                        <button class="btn btn-sm btn-primary" onclick="viewStudentDetails('${att.student?._id}')" style="padding: 5px 10px;">
-                            <i class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">visibility</i>
-                        </button>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-view btn-sm" onclick="viewStudentDetails('${att.student?._id}')" title="عرض التفاصيل">
+                                <i class="material-symbols-rounded">visibility</i>
+                            </button>
+                            <button class="btn-action btn-delete btn-sm" onclick="deleteAttendance('${att._id}', '${att.student?.studentName || 'هذا السجل'}')" title="حذف السجل">
+                                <i class="material-symbols-rounded">delete</i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -661,12 +718,14 @@
                     <td>${att.student?.parentName || 'غير متوفر'}</td>
                     <td>${att.student?.parentPhone1 || 'غير متوفر'}</td>
                     <td>
-                        <button class="btn btn-sm btn-secondary me-1" onclick="contactParent('${att.student?._id}')" style="padding: 5px 10px;">
-                            <i class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">phone</i>
-                        </button>
-                        <button class="btn btn-sm btn-primary" onclick="viewStudentDetails('${att.student?._id}')" style="padding: 5px 10px;">
-                            <i class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">visibility</i>
-                        </button>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-view btn-sm" onclick="viewStudentDetails('${att.student?._id}')" title="عرض التفاصيل">
+                                <i class="material-symbols-rounded">visibility</i>
+                            </button>
+                            <button class="btn-action btn-delete btn-sm" onclick="deleteAttendance('${att._id}', '${att.student?.studentName || 'هذا السجل'}')" title="حذف السجل">
+                                <i class="material-symbols-rounded">delete</i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -707,9 +766,14 @@
                         </td>
                         <td><span class="badge">${duration}</span></td>
                         <td>
-                            <button class="btn btn-sm btn-primary" onclick="viewStudentDetails('${att.student?._id}')" style="padding: 5px 10px;">
-                                <i class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">visibility</i>
-                            </button>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-view btn-sm" onclick="viewStudentDetails('${att.student?._id}')" title="عرض التفاصيل">
+                                    <i class="material-symbols-rounded">visibility</i>
+                                </button>
+                                <button class="btn-action btn-delete btn-sm" onclick="deleteAttendance('${att._id}', '${att.student?.studentName || 'هذا السجل'}')" title="حذف السجل">
+                                    <i class="material-symbols-rounded">delete</i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -769,6 +833,34 @@
     function contactParent(studentId) {
       // Implement contact parent functionality
       showNotification('سيتم التواصل مع ولي الأمر قريباً', 'info');
+    }
+
+    // Delete attendance record
+    async function deleteAttendance(attendanceId, studentName) {
+      if (!confirm(`هل أنت متأكد من حذف سجل الحضور للطالب "${studentName}"؟\n\n⚠️ تحذير: لا يمكن التراجع عن هذا الإجراء!`)) {
+        return;
+      }
+
+      try {
+        const response = await axios.delete(`/admin/attendance/student/${attendanceId}`);
+        
+        if (response.data.success) {
+          // Reload data to refresh the table
+          loadAttendanceData();
+          showNotification('✅ تم حذف سجل الحضور بنجاح', 'success');
+        } else {
+          showNotification('❌ حدث خطأ أثناء حذف السجل', 'danger');
+        }
+      } catch (error) {
+        console.error('Error deleting attendance:', error);
+        if (error.response && error.response.status === 404) {
+          showNotification('❌ لم يتم العثور على السجل', 'danger');
+        } else if (error.response && error.response.status === 401) {
+          showNotification('❌ غير مصرح لك بحذف هذا السجل', 'danger');
+        } else {
+          showNotification('❌ حدث خطأ أثناء حذف السجل: ' + (error.response?.data?.error || error.message), 'danger');
+        }
+      }
     }
 
     function exportToExcel() {

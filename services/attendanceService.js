@@ -6,32 +6,16 @@ const Employee = require('../models/employee');
 const Attendance = require('../models/attendance');
 const EmployeeAttendance = require('../models/employeeAttendance');
 const DailyClassAttendance = require('../models/dailyClassAttendance');
+const { parseToEgyptTime, getEgyptDayBoundaries } = require('../utils/timezone');
 
-// Utility: Get start and end of day
-function getDayBoundaries(date = new Date()) {
-  const start = new Date(date);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(date);
-  end.setHours(23, 59, 59, 999);
-
-  return { start, end };
+// Utility: Get start and end of day (Egypt timezone)
+function getDayBoundaries(date = null) {
+  return getEgyptDayBoundaries(date);
 }
 
-// Utility: Parse ZKTeco date format
+// Utility: Parse ZKTeco date format to Egypt timezone
 function parseZKTecoDate(dateString) {
-  if (!dateString) return new Date();
-
-  // Try parsing the date string
-  const parsed = new Date(dateString);
-
-  // If parsing failed, use current date
-  if (isNaN(parsed.getTime())) {
-    console.log(`⚠️ Could not parse date: ${dateString}, using current date`);
-    return new Date();
-  }
-
-  return parsed;
+  return parseToEgyptTime(dateString);
 }
 
 // Utility: Convert verify code to readable format

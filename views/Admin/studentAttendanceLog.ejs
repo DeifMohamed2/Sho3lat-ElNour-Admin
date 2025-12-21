@@ -234,6 +234,53 @@
     .info-value {
       color: #000;
     }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn-action {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .btn-view {
+      background-color: #0d6efd;
+      color: white;
+    }
+
+    .btn-view:hover {
+      background-color: #0b5ed7;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+    }
+
+    .btn-delete {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .btn-delete:hover {
+      background-color: #bb2d3b;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-action i {
+      font-size: 18px;
+      margin-left: 4px;
+    }
   </style>
 </head>
 
@@ -390,12 +437,14 @@
                         <th>وقت الدخول</th>
                         <th>وقت الخروج</th>
                         <th>الحالة</th>
+                        <th>طريقة التحقق</th>
                         <th>ملاحظات</th>
+                        <th class="text-center">الإجراءات</th>
                       </tr>
                     </thead>
                     <tbody id="attendanceTableBody">
                       <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">جاري التحميل...</td>
+                        <td colspan="10" class="text-center py-5 text-muted">جاري التحميل...</td>
                       </tr>
                     </tbody>
                   </table>
@@ -510,7 +559,7 @@
       const tbody = document.getElementById('attendanceTableBody');
       
       if (!attendance || attendance.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted">لا توجد سجلات حضور</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center py-5 text-muted">لا توجد سجلات حضور</td></tr>';
         return;
       }
 
@@ -532,16 +581,52 @@
           statusBadge = '<span class="status-badge badge-departed"><i class="material-symbols-rounded me-1" style="font-size: 16px;">logout</i>انصراف مبكر</span>';
         }
 
+        // Get verify method display
+        const verifyMethod = att.verifyMethod || 'Face Recognition';
+        let verifyIcon = 'face';
+        let verifyText = 'تعرف الوجه';
+        if (verifyMethod.includes('Fingerprint') || verifyMethod.includes('fingerprint')) {
+          verifyIcon = 'fingerprint';
+          verifyText = 'بصمة';
+        } else if (verifyMethod.includes('Card') || verifyMethod.includes('RFID')) {
+          verifyIcon = 'credit_card';
+          verifyText = 'بطاقة';
+        } else if (verifyMethod.includes('Password')) {
+          verifyIcon = 'lock';
+          verifyText = 'كلمة مرور';
+        }
+
         return `
-          <tr>
+          <tr id="attendance-row-${att._id}">
             <td>${index + 1}</td>
             <td>${date.toLocaleDateString('ar-EG')}</td>
             <td>${dayName}</td>
             <td>${att.class?.className || 'غير محدد'}</td>
-            <td>${att.entryTime ? new Date(att.entryTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '---'}</td>
-            <td>${att.exitTime ? new Date(att.exitTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '---'}</td>
+            <td>
+              ${att.entryTime ? `
+                <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">schedule</i>
+                ${new Date(att.entryTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true })}
+              ` : '---'}
+            </td>
+            <td>${att.exitTime ? new Date(att.exitTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true }) : '---'}</td>
             <td>${statusBadge}</td>
+            <td>
+              <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">${verifyIcon}</i>
+              ${verifyText}
+            </td>
             <td>${att.notes || att.leaveReason || '---'}</td>
+            <td class="text-center">
+              <div class="action-buttons">
+                <button class="btn-action btn-view" onclick="viewAttendanceDetails('${att._id}')" title="عرض التفاصيل">
+                  <i class="material-symbols-rounded">visibility</i>
+                  <span>عرض</span>
+                </button>
+                <button class="btn-action btn-delete" onclick="deleteAttendance('${att._id}', '${att.student?.studentName || 'هذا السجل'}')" title="حذف السجل">
+                  <i class="material-symbols-rounded">delete</i>
+                  <span>حذف</span>
+                </button>
+              </div>
+            </td>
           </tr>
         `;
       }).join('');
@@ -583,6 +668,100 @@
         return;
       }
       window.location.href = `/admin/export-student-log/${currentStudentId}`;
+    }
+
+    // View attendance details
+    function viewAttendanceDetails(attendanceId) {
+      // Find the attendance record
+      const row = document.getElementById(`attendance-row-${attendanceId}`);
+      if (!row) return;
+
+      // Get all data from the row
+      const cells = row.querySelectorAll('td');
+      const details = {
+        date: cells[1].textContent,
+        day: cells[2].textContent,
+        class: cells[3].textContent,
+        entryTime: cells[4].textContent,
+        exitTime: cells[5].textContent,
+        status: cells[6].textContent,
+        verifyMethod: cells[7].textContent,
+        notes: cells[8].textContent
+      };
+
+      // Show details in a modal or alert
+      const detailsText = `
+تفاصيل سجل الحضور:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+التاريخ: ${details.date}
+اليوم: ${details.day}
+الفصل: ${details.class}
+وقت الدخول: ${details.entryTime}
+وقت الخروج: ${details.exitTime}
+الحالة: ${details.status}
+طريقة التحقق: ${details.verifyMethod}
+الملاحظات: ${details.notes}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      `;
+      
+      alert(detailsText);
+    }
+
+    // Delete attendance record
+    async function deleteAttendance(attendanceId, studentName) {
+      if (!confirm(`هل أنت متأكد من حذف سجل الحضور للطالب "${studentName}"؟\n\n⚠️ تحذير: لا يمكن التراجع عن هذا الإجراء!`)) {
+        return;
+      }
+
+      try {
+        const response = await axios.delete(`/admin/attendance/student/${attendanceId}`);
+        
+        if (response.data.success) {
+          // Remove the row from table
+          const row = document.getElementById(`attendance-row-${attendanceId}`);
+          if (row) {
+            row.style.transition = 'opacity 0.3s ease';
+            row.style.opacity = '0';
+            setTimeout(() => {
+              row.remove();
+              
+              // Check if table is empty
+              const tbody = document.getElementById('attendanceTableBody');
+              if (tbody.children.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center py-5 text-muted">لا توجد سجلات حضور</td></tr>';
+              } else {
+                // Renumber rows
+                const rows = tbody.querySelectorAll('tr');
+                rows.forEach((row, index) => {
+                  const firstCell = row.querySelector('td');
+                  if (firstCell) {
+                    firstCell.textContent = index + 1;
+                  }
+                });
+              }
+            }, 300);
+          }
+          
+          // Show success message
+          alert('✅ تم حذف سجل الحضور بنجاح');
+          
+          // Refresh statistics
+          if (currentStudentId) {
+            searchStudent();
+          }
+        } else {
+          alert('❌ حدث خطأ أثناء حذف السجل');
+        }
+      } catch (error) {
+        console.error('Error deleting attendance:', error);
+        if (error.response && error.response.status === 404) {
+          alert('❌ لم يتم العثور على السجل');
+        } else if (error.response && error.response.status === 401) {
+          alert('❌ غير مصرح لك بحذف هذا السجل');
+        } else {
+          alert('❌ حدث خطأ أثناء حذف السجل: ' + (error.response?.data?.error || error.message));
+        }
+      }
     }
 
     // Allow Enter key to search

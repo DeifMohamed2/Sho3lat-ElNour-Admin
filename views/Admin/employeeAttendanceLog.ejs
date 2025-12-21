@@ -388,11 +388,12 @@
                         <th>الساعات</th>
                         <th>الحالة</th>
                         <th>الملاحظات</th>
+                        <th class="text-center">الإجراءات</th>
                       </tr>
                     </thead>
                     <tbody id="attendanceTableBody">
                       <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">جاري التحميل...</td>
+                        <td colspan="9" class="text-center py-5 text-muted">جاري التحميل...</td>
                       </tr>
                     </tbody>
                   </table>
@@ -526,17 +527,17 @@
       document.getElementById('totalAbsent').textContent = totalAbsent;
       document.getElementById('totalPaid').textContent = totalPaid + ' ج.م';
 
-      // Render tables
-      renderAttendanceTable(attendance);
+      // Render tables (pass employee for delete function)
+      renderAttendanceTable(attendance, employee);
       renderPaymentsTable(payments);
       renderDeductionsTable(deductions);
     }
 
-    function renderAttendanceTable(attendance) {
+    function renderAttendanceTable(attendance, employee) {
       const tbody = document.getElementById('attendanceTableBody');
       
       if (!attendance || attendance.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted">لا توجد سجلات حضور</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5 text-muted">لا توجد سجلات حضور</td></tr>';
         return;
       }
 
@@ -561,15 +562,27 @@
         }
 
         return `
-          <tr>
+          <tr id="attendance-row-${att._id}">
             <td>${index + 1}</td>
             <td>${date.toLocaleDateString('ar-EG')}</td>
             <td>${dayName}</td>
-            <td>${att.checkInTime ? new Date(att.checkInTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '---'}</td>
-            <td>${att.checkOutTime ? new Date(att.checkOutTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '---'}</td>
+            <td>${att.checkInTime ? new Date(att.checkInTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true }) : '---'}</td>
+            <td>${att.checkOutTime ? new Date(att.checkOutTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true }) : '---'}</td>
             <td><strong>${(att.totalHours || 0).toFixed(1)} ساعة</strong></td>
             <td>${statusBadge}</td>
             <td>${att.notes || '---'}</td>
+            <td class="text-center">
+              <div class="action-buttons">
+                <button class="btn-action btn-view" onclick="viewAttendanceDetails('${att._id}')" title="عرض التفاصيل">
+                  <i class="material-symbols-rounded">visibility</i>
+                  <span>عرض</span>
+                </button>
+                <button class="btn-action btn-delete" onclick="deleteEmployeeAttendance('${att._id}', '${employee?.employeeName || 'هذا السجل'}')" title="حذف السجل">
+                  <i class="material-symbols-rounded">delete</i>
+                  <span>حذف</span>
+                </button>
+              </div>
+            </td>
           </tr>
         `;
       }).join('');
@@ -639,6 +652,98 @@
         return;
       }
       window.location.href = `/admin/export-employee-log/${currentEmployeeId}`;
+    }
+
+    // View attendance details
+    function viewAttendanceDetails(attendanceId) {
+      // Find the attendance record
+      const row = document.getElementById(`attendance-row-${attendanceId}`);
+      if (!row) return;
+
+      // Get all data from the row
+      const cells = row.querySelectorAll('td');
+      const details = {
+        date: cells[1].textContent,
+        day: cells[2].textContent,
+        checkIn: cells[3].textContent,
+        checkOut: cells[4].textContent,
+        hours: cells[5].textContent,
+        status: cells[6].textContent,
+        notes: cells[7].textContent
+      };
+
+      // Show details in a modal or alert
+      const detailsText = `
+تفاصيل سجل الحضور:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+التاريخ: ${details.date}
+اليوم: ${details.day}
+وقت الدخول: ${details.checkIn}
+وقت الخروج: ${details.checkOut}
+الساعات: ${details.hours}
+الحالة: ${details.status}
+الملاحظات: ${details.notes}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      `;
+      
+      alert(detailsText);
+    }
+
+    // Delete employee attendance record
+    async function deleteEmployeeAttendance(attendanceId, employeeName) {
+      if (!confirm(`هل أنت متأكد من حذف سجل الحضور للموظف "${employeeName}"؟\n\n⚠️ تحذير: لا يمكن التراجع عن هذا الإجراء!`)) {
+        return;
+      }
+
+      try {
+        const response = await axios.delete(`/admin/attendance/employee/${attendanceId}`);
+        
+        if (response.data.success) {
+          // Remove the row from table
+          const row = document.getElementById(`attendance-row-${attendanceId}`);
+          if (row) {
+            row.style.transition = 'opacity 0.3s ease';
+            row.style.opacity = '0';
+            setTimeout(() => {
+              row.remove();
+              
+              // Check if table is empty
+              const tbody = document.getElementById('attendanceTableBody');
+              if (tbody.children.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5 text-muted">لا توجد سجلات حضور</td></tr>';
+              } else {
+                // Renumber rows
+                const rows = tbody.querySelectorAll('tr');
+                rows.forEach((row, index) => {
+                  const firstCell = row.querySelector('td');
+                  if (firstCell) {
+                    firstCell.textContent = index + 1;
+                  }
+                });
+              }
+              
+              // Refresh employee data to update statistics
+              if (currentEmployeeId) {
+                searchEmployee();
+              }
+            }, 300);
+          }
+          
+          // Show success message
+          alert('✅ تم حذف سجل الحضور بنجاح');
+        } else {
+          alert('❌ حدث خطأ أثناء حذف السجل');
+        }
+      } catch (error) {
+        console.error('Error deleting employee attendance:', error);
+        if (error.response && error.response.status === 404) {
+          alert('❌ لم يتم العثور على السجل');
+        } else if (error.response && error.response.status === 401) {
+          alert('❌ غير مصرح لك بحذف هذا السجل');
+        } else {
+          alert('❌ حدث خطأ أثناء حذف السجل: ' + (error.response?.data?.error || error.message));
+        }
+      }
     }
 
     // Allow Enter key to search

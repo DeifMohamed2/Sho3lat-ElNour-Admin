@@ -4,6 +4,7 @@ const Student = require('../models/student');
 const Employee = require('../models/employee');
 const Attendance = require('../models/attendance');
 const EmployeeAttendance = require('../models/employeeAttendance');
+const { parseToEgyptTime, getEgyptDayBoundaries, formatEgyptDate } = require('../utils/timezone');
 
 /* =======================
    DEVICE PING
@@ -143,18 +144,15 @@ exports.handleZKTecoAttendance = async (req, res) => {
       return;
     }
 
-    // 5️⃣ Parse datetime (format: YYYY-MM-DD HH:MM:SS)
+    // 5️⃣ Parse datetime to Egypt timezone (format: YYYY-MM-DD HH:MM:SS)
     let scanTime;
     try {
       // ZKTeco format: "2025-01-24 14:30:00"
-      scanTime = new Date(dateTime.replace(' ', 'T'));
+      // Parse assuming time from device is in Egypt timezone
+      scanTime = parseToEgyptTime(dateTime);
       if (isNaN(scanTime.getTime())) {
-        // Try alternative format
-        scanTime = new Date(dateTime);
-        if (isNaN(scanTime.getTime())) {
-          console.log(`⚠️  Could not parse datetime: ${dateTime}`);
-          return;
-        }
+        console.log(`⚠️  Could not parse datetime: ${dateTime}`);
+        return;
       }
     } catch (err) {
       console.log(`⚠️  Datetime parse error: ${err.message}`);
@@ -178,16 +176,16 @@ exports.handleZKTecoAttendance = async (req, res) => {
 Device SN: ${deviceSN}
 👤 User ID: ${userId}
 🕐 DateTime: ${dateTime}
-⏰ Parsed Time: ${scanTime.toISOString()}
+⏰ Parsed Time (Egypt): ${formatEgyptDate(scanTime)}
 🔐 Method: ${verifyMap[verify] || 'Unknown'} (${verify})
 ${status ? `📊 Status: ${status}` : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `);
 
-    const today = new Date(scanTime);
-    today.setHours(0, 0, 0, 0);
-
-    const isAfter3PM = scanTime.getHours() >= 15;
+    // Get day boundaries in Egypt timezone
+    const { start: today } = getEgyptDayBoundaries(scanTime);
+    const scanHour = scanTime.getHours(); // Hour in Egypt timezone
+    const isAfter3PM = scanHour >= 15;
 
     // 6️⃣ Try to find Student by studentCode
     // ZKTeco device sends student code as user ID

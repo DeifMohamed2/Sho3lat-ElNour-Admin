@@ -2999,6 +2999,81 @@ const deleteInvoice = async (req, res) => {
 // Note: ZKTeco User ID assignment functions removed
 // The system now uses studentCode and employeeCode directly from ZKTeco device
 
+// Delete Student Attendance Record (Hard Delete)
+const deleteStudentAttendance = async (req, res) => {
+  try {
+    const { attendanceId } = req.params;
+    const adminId = req.adminId;
+
+    if (!adminId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const attendance = await Attendance.findById(attendanceId);
+
+    if (!attendance) {
+      return res.status(404).json({ error: 'Attendance record not found' });
+    }
+
+    // Hard delete - permanently remove from database
+    await Attendance.findByIdAndDelete(attendanceId);
+
+    res.json({
+      success: true,
+      message: 'Attendance record deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting student attendance:', error);
+    res.status(500).json({ error: 'Error deleting attendance record' });
+  }
+};
+
+// Delete Employee Attendance Record (Hard Delete)
+const deleteEmployeeAttendance = async (req, res) => {
+  try {
+    const { attendanceId } = req.params;
+    const adminId = req.adminId;
+
+    console.log(`🗑️  Delete employee attendance request: ${attendanceId} by admin: ${adminId}`);
+
+    if (!adminId) {
+      console.log('❌ Unauthorized: No admin ID');
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!attendanceId) {
+      console.log('❌ Missing attendance ID');
+      return res.status(400).json({ error: 'Attendance ID is required' });
+    }
+
+    const attendance = await EmployeeAttendance.findById(attendanceId);
+
+    if (!attendance) {
+      console.log(`❌ Attendance record not found: ${attendanceId}`);
+      return res.status(404).json({ error: 'Attendance record not found' });
+    }
+
+    console.log(`✅ Found attendance record: ${attendanceId} for employee: ${attendance.employee}`);
+
+    // Hard delete - permanently remove from database
+    await EmployeeAttendance.findByIdAndDelete(attendanceId);
+
+    console.log(`✅ Successfully deleted employee attendance: ${attendanceId}`);
+
+    res.json({
+      success: true,
+      message: 'Employee attendance record deleted successfully',
+    });
+  } catch (error) {
+    console.error('❌ Error deleting employee attendance:', error);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Error deleting attendance record',
+      details: error.message 
+    });
+  }
+};
+
 // Get Daily Class Attendance Report
 const getDailyClassAttendanceReport = async (req, res) => {
   try {
@@ -3965,6 +4040,8 @@ module.exports = {
   getStudentsByClass,
   recordAttendance,
   getStudentAttendanceHistory,
+  deleteStudentAttendance,
+  deleteEmployeeAttendance,
 
   // Billing/Invoice Management (using admin_billing_Get)
   createInvoice,
