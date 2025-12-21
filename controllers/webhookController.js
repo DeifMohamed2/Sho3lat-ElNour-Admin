@@ -185,6 +185,7 @@ ${status ? `📊 Status: ${status}` : ''}
     // Get day boundaries in Egypt timezone
     const { start: today } = getEgyptDayBoundaries(scanTime);
     const scanHour = scanTime.getHours(); // Hour in Egypt timezone
+    const scanMinute = scanTime.getMinutes(); // Minute in Egypt timezone
     const isAfter3PM = scanHour >= 15;
 
     // 6️⃣ Try to find Student by studentCode
@@ -207,7 +208,18 @@ ${status ? `📊 Status: ${status}` : ''}
 
     if (employee) {
       console.log(`✅ Found Employee: ${employee.employeeName} (Code: ${employee.employeeCode})`);
-      return handleEmployee(employee, scanTime, today, isAfter3PM, deviceSN);
+      const verifyMethodMap = {
+        '0': 'Password',
+        '1': 'Fingerprint',
+        '2': 'RFID Card',
+        '4': 'RFID Card',
+        '8': 'Face Recognition',
+        '15': 'Face Recognition',
+        '16': 'Face Recognition',
+        '17': 'Face Recognition',
+      };
+      const verifyMethod = verifyMethodMap[verify] || 'Fingerprint';
+      return handleEmployee(employee, scanTime, today, isAfter3PM, deviceSN, verifyMethod);
     }
 
     // 8️⃣ Not found in either students or employees
@@ -263,24 +275,80 @@ async function handleStudent(student, scanTime, today, isAfter3PM, deviceSN) {
 /* =======================
    EMPLOYEE LOGIC
 ======================= */
-async function handleEmployee(employee, scanTime, today, isAfter3PM, deviceSN) {
+async function handleEmployee(employee, scanTime, today, isAfter3PM, deviceSN, verifyMethod = 'Fingerprint') {
   let record = await EmployeeAttendance.findOne({
     employee: employee._id,
     date: today,
   });
 
+  const scanHour = scanTime.getHours();
+  const scanMinute = scanTime.getMinutes();
+  
+  // Determine scan type: Check In (before 3PM) or Check Out (after 3PM)
+  const scanType = isAfter3PM ? 'Check Out' : 'Check In';
+
+  // Determine if employee is late (work starts at 8:00 AM, late after 8:15 AM)
+  // Only applies to check-ins before 3PM
+  const workStartHour = 8;
+  const workStartMinute = 15;
+  const isLate = !isAfter3PM && (scanHour > workStartHour || (scanHour === workStartHour && scanMinute > workStartMinute));
+
   if (!record) {
+    // Create new attendance record (first scan of the day)
+    const initialStatus = isLate ? 'Late' : 'Present';
+    
     record = await EmployeeAttendance.create({
       employee: employee._id,
       date: today,
-      checkInTime: scanTime,
+      checkInTime: isAfter3PM ? null : scanTime, // Only set if it's a check-in
+      checkOutTime: isAfter3PM ? scanTime : null, // Only set if it's a check-out (edge case)
+      status: initialStatus,
+      scans: [{
+        scanTime: scanTime,
+        scanType: scanType,
+        verifyMethod: verifyMethod,
+        deviceSN: deviceSN,
+      }],
       deviceSN,
       isAutomated: true,
     });
-    console.log('✅ Employee check-in');
-  } else if (isAfter3PM && !record.checkOutTime) {
-    record.checkOutTime = scanTime;
+    console.log(`✅ Employee ${scanType.toLowerCase()}: ${employee.employeeName}${isLate ? ' (Late)' : ' (Present)'}`);
+  } else {
+    // Update existing record - add scan to scans array
+    record.scans.push({
+      scanTime: scanTime,
+      scanType: scanType,
+      verifyMethod: verifyMethod,
+      deviceSN: deviceSN,
+    });
+
+    // Update check-in/check-out times (only first of each type)
+    if (!isAfter3PM && !record.checkInTime) {
+      // First check-in of the day
+      record.checkInTime = scanTime;
+      
+      // Update status if late (only set Late on first check-in)
+      if (isLate) {
+        record.status = 'Late';
+      }
+      console.log(`✅ Employee check-in: ${employee.employeeName}${isLate ? ' (Late)' : ' (Present)'}`);
+    } else if (isAfter3PM && !record.checkOutTime) {
+      // First check-out of the day
+      record.checkOutTime = scanTime;
+      
+      // Recalculate totalHours after setting checkOutTime
+      if (record.checkInTime && record.checkOutTime) {
+        const diffMs = record.checkOutTime.getTime() - record.checkInTime.getTime();
+        record.totalHours = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
+        if (record.totalHours < 0) record.totalHours = 0;
+      }
+      
+      console.log(`✅ Employee check-out: ${employee.employeeName}`);
+    } else {
+      // Additional scan (multiple entries/exits)
+      console.log(`✅ Employee additional ${scanType.toLowerCase()}: ${employee.employeeName}`);
+    }
+
     await record.save();
-    console.log('✅ Employee check-out');
   }
 }

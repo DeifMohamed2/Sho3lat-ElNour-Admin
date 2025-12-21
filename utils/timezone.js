@@ -86,6 +86,30 @@ function getEgyptDayBoundaries(date = null) {
   };
 }
 
+/**
+ * Format time in Egypt timezone (12-hour format with AM/PM)
+ * @param {Date} date - Date to format
+ * @param {boolean} includeSeconds - Whether to include seconds
+ * @returns {string} Formatted time string
+ */
+function formatEgyptTime(date, includeSeconds = false) {
+  if (!date) return null;
+  const format = includeSeconds ? 'h:mm:ss A' : 'h:mm A';
+  return moment.tz(date, EGYPT_TIMEZONE).format(format);
+}
+
+/**
+ * Format time in Egypt timezone (24-hour format)
+ * @param {Date} date - Date to format
+ * @param {boolean} includeSeconds - Whether to include seconds
+ * @returns {string} Formatted time string
+ */
+function formatEgyptTime24(date, includeSeconds = false) {
+  if (!date) return null;
+  const format = includeSeconds ? 'HH:mm:ss' : 'HH:mm';
+  return moment.tz(date, EGYPT_TIMEZONE).format(format);
+}
+
 module.exports = {
   parseToEgyptTime,
   getEgyptDate,
@@ -93,5 +117,7 @@ module.exports = {
   getEgyptDayEnd,
   formatEgyptDate,
   getEgyptDayBoundaries,
+  formatEgyptTime,
+  formatEgyptTime24,
 };
 

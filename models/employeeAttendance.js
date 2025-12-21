@@ -90,9 +90,19 @@ employeeAttendanceSchema.index({ isAutomated: 1 });
 
 // Calculate total hours before saving
 employeeAttendanceSchema.pre('save', function (next) {
+  // Calculate total hours if both check-in and check-out times exist
   if (this.checkInTime && this.checkOutTime) {
-    const diffMs = this.checkOutTime - this.checkInTime;
-    this.totalHours = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100; // Round to 2 decimals
+    const diffMs = this.checkOutTime.getTime() - this.checkInTime.getTime();
+    // Convert milliseconds to hours and round to 2 decimal places
+    this.totalHours = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
+    
+    // Ensure totalHours is not negative (edge case protection)
+    if (this.totalHours < 0) {
+      this.totalHours = 0;
+    }
+  } else {
+    // Reset to 0 if either time is missing
+    this.totalHours = 0;
   }
   next();
 });

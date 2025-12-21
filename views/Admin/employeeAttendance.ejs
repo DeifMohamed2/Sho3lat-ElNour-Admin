@@ -624,10 +624,38 @@
   <script src="../assets/js/core/popper.min.js"></script>
   <script src="../assets/js/core/bootstrap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment-timezone@0.5.43/builds/moment-timezone-with-data.min.js"></script>
   <script>
     let allData = [];
     let filteredData = [];
     let currentTab = 'present';
+    
+    // Egypt timezone constant
+    const EGYPT_TIMEZONE = 'Africa/Cairo';
+    
+    // Format time in Egypt timezone (12-hour format)
+    function formatEgyptTime(dateString, includeSeconds = false) {
+      if (!dateString) return null;
+      const format = includeSeconds ? 'h:mm:ss A' : 'h:mm A';
+      return moment.tz(dateString, EGYPT_TIMEZONE).format(format);
+    }
+    
+    // Format time in Egypt timezone (24-hour format)
+    function formatEgyptTime24(dateString, includeSeconds = false) {
+      if (!dateString) return null;
+      const format = includeSeconds ? 'HH:mm:ss' : 'HH:mm';
+      return moment.tz(dateString, EGYPT_TIMEZONE).format(format);
+    }
+    
+    // Calculate hours between two times in Egypt timezone
+    function calculateHours(checkInTime, checkOutTime) {
+      if (!checkInTime || !checkOutTime) return 0;
+      const checkIn = moment.tz(checkInTime, EGYPT_TIMEZONE);
+      const checkOut = moment.tz(checkOutTime, EGYPT_TIMEZONE);
+      const diffHours = checkOut.diff(checkIn, 'hours', true); // true for decimal
+      return Math.max(0, Math.round(diffHours * 100) / 100); // Round to 2 decimals, ensure non-negative
+    }
 
     // Load attendance data with filters
     async function loadAttendanceData() {
@@ -707,19 +735,19 @@
                     <td><span class="badge">${getEmployeeType(att.employee?.employeeType)}</span></td>
                     <td>
                         <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">login</i>
-                        ${new Date(att.checkInTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                        ${att.checkInTime ? formatEgyptTime(att.checkInTime) : '---'}
                     </td>
                     <td>
                         ${att.checkOutTime ? 
                             `<i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">logout</i>
-                            ${new Date(att.checkOutTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}` : 
+                            ${formatEgyptTime(att.checkOutTime)}` : 
                             '<span class="text-muted">لم ينصرف</span>'}
                     </td>
                     <td>
                         <span class="badge">${att.scans?.length || 0}</span>
                         ${renderScans(att.scans)}
                     </td>
-                    <td><span class="badge">${(att.totalHours || 0).toFixed(1)}س</span></td>
+                    <td><span class="badge">${(att.totalHours !== undefined && att.totalHours !== null ? att.totalHours : calculateHours(att.checkInTime, att.checkOutTime)).toFixed(1)}س</span></td>
                     <td><span class="status-badge status-${att.status.toLowerCase()}">${getStatusText(att.status)}</span></td>
                     <td>
                         <div class="action-buttons">
@@ -798,17 +826,17 @@
                     <td><span class="badge">${getEmployeeType(att.employee?.employeeType)}</span></td>
                     <td>
                         <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">login</i>
-                        ${new Date(att.checkInTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                        ${att.checkInTime ? formatEgyptTime(att.checkInTime) : '---'}
                     </td>
                     <td>
                         <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">logout</i>
-                        ${new Date(att.checkOutTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                        ${att.checkOutTime ? formatEgyptTime(att.checkOutTime) : '---'}
                     </td>
                     <td>
                         <span class="badge">${att.scans?.length || 0}</span>
                         ${renderScans(att.scans)}
                     </td>
-                    <td><span class="badge">${(att.totalHours || 0).toFixed(1)}س</span></td>
+                    <td><span class="badge">${(att.totalHours !== undefined && att.totalHours !== null ? att.totalHours : calculateHours(att.checkInTime, att.checkOutTime)).toFixed(1)}س</span></td>
                     <td>
                         <div class="action-buttons">
                             <button class="btn-action btn-view btn-sm" onclick="viewEmployeeDetails('${att.employee?._id}')" title="عرض التفاصيل">
@@ -828,10 +856,7 @@
       if (!scans || scans.length === 0) return '';
 
       const scanHtml = scans.slice(0, 3).map(scan => {
-        const time = new Date(scan.scanTime).toLocaleTimeString('ar-EG', {
-          hour: '2-digit',
-          minute: '2-digit'
-        });
+        const time = formatEgyptTime(scan.scanTime);
         return `<span class="scan-badge">${time}</span>`;
       }).join('');
 
