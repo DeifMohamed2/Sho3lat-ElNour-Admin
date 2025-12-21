@@ -566,8 +566,8 @@
             <td>${index + 1}</td>
             <td>${date.toLocaleDateString('ar-EG')}</td>
             <td>${dayName}</td>
-            <td>${att.checkInTime ? new Date(att.checkInTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true }) : '---'}</td>
-            <td>${att.checkOutTime ? new Date(att.checkOutTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true }) : '---'}</td>
+            <td>${att.checkInTime ? new Date(att.checkInTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Africa/Cairo' }) : '---'}</td>
+            <td>${att.checkOutTime ? new Date(att.checkOutTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Africa/Cairo' }) : '---'}</td>
             <td><strong>${(att.totalHours || 0).toFixed(1)} ساعة</strong></td>
             <td>${statusBadge}</td>
             <td>${att.notes || '---'}</td>

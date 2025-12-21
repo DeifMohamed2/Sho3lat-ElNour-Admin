@@ -624,8 +624,6 @@
   <script src="../assets/js/core/popper.min.js"></script>
   <script src="../assets/js/core/bootstrap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/moment-timezone@0.5.43/builds/moment-timezone-with-data.min.js"></script>
   <script>
     let allData = [];
     let filteredData = [];
@@ -634,26 +632,53 @@
     // Egypt timezone constant
     const EGYPT_TIMEZONE = 'Africa/Cairo';
     
-    // Format time in Egypt timezone (12-hour format)
-    function formatEgyptTime(dateString, includeSeconds = false) {
-      if (!dateString) return null;
-      const format = includeSeconds ? 'h:mm:ss A' : 'h:mm A';
-      return moment.tz(dateString, EGYPT_TIMEZONE).format(format);
+    // Format time in Egypt timezone (12-hour format) - consistent with student attendance
+    function formatEgyptTime(dateValue, includeSeconds = false) {
+      if (!dateValue) return null;
+      // If it's a string, convert to Date first
+      const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
+      if (!date || isNaN(date.getTime())) return null;
+      
+      // Use native toLocaleTimeString with Egypt locale for consistent formatting
+      const options = {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'Africa/Cairo'
+      };
+      if (includeSeconds) options.second = '2-digit';
+      
+      return date.toLocaleTimeString('ar-EG', options);
     }
     
     // Format time in Egypt timezone (24-hour format)
-    function formatEgyptTime24(dateString, includeSeconds = false) {
-      if (!dateString) return null;
-      const format = includeSeconds ? 'HH:mm:ss' : 'HH:mm';
-      return moment.tz(dateString, EGYPT_TIMEZONE).format(format);
+    function formatEgyptTime24(dateValue, includeSeconds = false) {
+      if (!dateValue) return null;
+      const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
+      if (!date || isNaN(date.getTime())) return null;
+      
+      const options = {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'Africa/Cairo'
+      };
+      if (includeSeconds) options.second = '2-digit';
+      
+      return date.toLocaleTimeString('ar-EG', options);
     }
     
     // Calculate hours between two times in Egypt timezone
     function calculateHours(checkInTime, checkOutTime) {
       if (!checkInTime || !checkOutTime) return 0;
-      const checkIn = moment.tz(checkInTime, EGYPT_TIMEZONE);
-      const checkOut = moment.tz(checkOutTime, EGYPT_TIMEZONE);
-      const diffHours = checkOut.diff(checkIn, 'hours', true); // true for decimal
+      
+      const checkIn = typeof checkInTime === 'string' ? new Date(checkInTime) : checkInTime;
+      const checkOut = typeof checkOutTime === 'string' ? new Date(checkOutTime) : checkOutTime;
+      
+      if (!checkIn || !checkOut || isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) return 0;
+      
+      const diffMs = checkOut.getTime() - checkIn.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
       return Math.max(0, Math.round(diffHours * 100) / 100); // Round to 2 decimals, ensure non-negative
     }
 

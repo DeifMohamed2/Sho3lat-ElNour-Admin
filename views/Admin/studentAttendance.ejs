@@ -674,7 +674,7 @@
                     <td>${att.class?.className || 'غير محدد'}</td>
                     <td>
                         <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">schedule</i>
-                        ${new Date(att.entryTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                        ${new Date(att.entryTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' })}
                     </td>
                     <td><span class="status-badge status-${att.status.toLowerCase()}">${getStatusText(att.status)}</span></td>
                     <td><i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">fingerprint</i>${att.verifyMethod || 'Face Recognition'}</td>
@@ -758,11 +758,11 @@
                         <td>${att.class?.className || 'غير محدد'}</td>
                         <td>
                             <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">login</i>
-                            ${new Date(att.entryTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                            ${new Date(att.entryTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' })}
                         </td>
                         <td>
                             <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">logout</i>
-                            ${new Date(att.exitTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                            ${new Date(att.exitTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' })}
                         </td>
                         <td><span class="badge">${duration}</span></td>
                         <td>
