@@ -629,46 +629,29 @@
     let filteredData = [];
     let currentTab = 'present';
     
-    // Egypt timezone constant
-    const EGYPT_TIMEZONE = 'Africa/Cairo';
-    
-    // Format time in Egypt timezone (12-hour format) - consistent with student attendance
-    function formatEgyptTime(dateValue, includeSeconds = false) {
-      if (!dateValue) return null;
-      // If it's a string, convert to Date first
-      const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
-      if (!date || isNaN(date.getTime())) return null;
-      
-      // Use native toLocaleTimeString with Egypt locale for consistent formatting
-      const options = {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'Africa/Cairo'
-      };
-      if (includeSeconds) options.second = '2-digit';
-      
-      return date.toLocaleTimeString('ar-EG', options);
-    }
-    
-    // Format time in Egypt timezone (24-hour format)
-    function formatEgyptTime24(dateValue, includeSeconds = false) {
+    // Format time in Egypt timezone - same method as student attendance
+    function formatTime(dateValue) {
       if (!dateValue) return null;
       const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
       if (!date || isNaN(date.getTime())) return null;
-      
-      const options = {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-        timeZone: 'Africa/Cairo'
-      };
-      if (includeSeconds) options.second = '2-digit';
-      
-      return date.toLocaleTimeString('ar-EG', options);
+      return date.toLocaleTimeString('ar-EG', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        timeZone: 'Africa/Cairo' 
+      });
     }
     
-    // Calculate hours between two times in Egypt timezone
+    // Check if employee actually checked out (checkOutTime exists and is different from checkInTime)
+    function hasActuallyCheckedOut(checkInTime, checkOutTime) {
+      if (!checkInTime || !checkOutTime) return false;
+      const checkIn = typeof checkInTime === 'string' ? new Date(checkInTime) : checkInTime;
+      const checkOut = typeof checkOutTime === 'string' ? new Date(checkOutTime) : checkOutTime;
+      if (!checkIn || !checkOut || isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) return false;
+      // Check if check-out time is different from check-in time (at least 1 minute difference)
+      return Math.abs(checkOut.getTime() - checkIn.getTime()) > 60000; // 1 minute in milliseconds
+    }
+    
+    // Calculate hours between two times
     function calculateHours(checkInTime, checkOutTime) {
       if (!checkInTime || !checkOutTime) return 0;
       
@@ -676,6 +659,9 @@
       const checkOut = typeof checkOutTime === 'string' ? new Date(checkOutTime) : checkOutTime;
       
       if (!checkIn || !checkOut || isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) return 0;
+      
+      // Only calculate if check-out is actually different from check-in
+      if (!hasActuallyCheckedOut(checkInTime, checkOutTime)) return 0;
       
       const diffMs = checkOut.getTime() - checkIn.getTime();
       const diffHours = diffMs / (1000 * 60 * 60);
@@ -716,9 +702,16 @@
       const present = filteredData.filter(a => a.status === 'Present' && a.checkInTime).length;
       const late = filteredData.filter(a => a.status === 'Late').length;
       const absent = filteredData.filter(a => a.status === 'Absent').length;
-      const departed = filteredData.filter(a => a.checkOutTime).length;
+      // Only count as departed if they actually checked out (checkOutTime is different from checkInTime)
+      const departed = filteredData.filter(a => a.checkOutTime && hasActuallyCheckedOut(a.checkInTime, a.checkOutTime)).length;
       const onLeave = filteredData.filter(a => a.status === 'On-Leave').length;
-      const totalHours = filteredData.reduce((sum, a) => sum + (a.totalHours || 0), 0);
+      const totalHours = filteredData.reduce((sum, a) => {
+        // Only count hours if they actually checked out
+        if (a.checkOutTime && hasActuallyCheckedOut(a.checkInTime, a.checkOutTime)) {
+          return sum + (calculateHours(a.checkInTime, a.checkOutTime) || 0);
+        }
+        return sum;
+      }, 0);
 
       document.getElementById('presentCount').textContent = present;
       document.getElementById('lateCount').textContent = late;
@@ -761,19 +754,19 @@
                     <td><span class="badge">${getEmployeeType(att.employee?.employeeType)}</span></td>
                     <td>
                         <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">login</i>
-                        ${att.checkInTime ? formatEgyptTime(att.checkInTime) : '---'}
+                        ${att.checkInTime ? formatTime(att.checkInTime) : '---'}
                     </td>
                     <td>
-                        ${att.checkOutTime ? 
+                        ${att.checkOutTime && hasActuallyCheckedOut(att.checkInTime, att.checkOutTime) ? 
                             `<i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">logout</i>
-                            ${formatEgyptTime(att.checkOutTime)}` : 
+                            ${formatTime(att.checkOutTime)}` : 
                             '<span class="text-muted">لم ينصرف</span>'}
                     </td>
                     <td>
                         <span class="badge">${att.scans?.length || 0}</span>
                         ${renderScans(att.scans)}
                     </td>
-                    <td><span class="badge">${(att.totalHours !== undefined && att.totalHours !== null ? att.totalHours : calculateHours(att.checkInTime, att.checkOutTime)).toFixed(1)}س</span></td>
+                    <td><span class="badge">${hasActuallyCheckedOut(att.checkInTime, att.checkOutTime) ? (calculateHours(att.checkInTime, att.checkOutTime)).toFixed(1) + 'س' : '0.0س'}</span></td>
                     <td><span class="status-badge status-${att.status.toLowerCase()}">${getStatusText(att.status)}</span></td>
                     <td>
                         <div class="action-buttons">
@@ -830,7 +823,8 @@
     // Render departed employees
     function renderDepartedTable() {
       const tbody = document.getElementById('departedTableBody');
-      const departed = filteredData.filter(a => a.checkOutTime);
+      // Only show employees who actually checked out (checkOutTime is different from checkInTime)
+      const departed = filteredData.filter(a => a.checkOutTime && hasActuallyCheckedOut(a.checkInTime, a.checkOutTime));
 
       if (departed.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5 text-muted">لا توجد بيانات</td></tr>';
@@ -852,17 +846,17 @@
                     <td><span class="badge">${getEmployeeType(att.employee?.employeeType)}</span></td>
                     <td>
                         <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">login</i>
-                        ${att.checkInTime ? formatEgyptTime(att.checkInTime) : '---'}
+                        ${att.checkInTime ? formatTime(att.checkInTime) : '---'}
                     </td>
                     <td>
                         <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">logout</i>
-                        ${att.checkOutTime ? formatEgyptTime(att.checkOutTime) : '---'}
+                        ${att.checkOutTime ? formatTime(att.checkOutTime) : '---'}
                     </td>
                     <td>
                         <span class="badge">${att.scans?.length || 0}</span>
                         ${renderScans(att.scans)}
                     </td>
-                    <td><span class="badge">${(att.totalHours !== undefined && att.totalHours !== null ? att.totalHours : calculateHours(att.checkInTime, att.checkOutTime)).toFixed(1)}س</span></td>
+                    <td><span class="badge">${hasActuallyCheckedOut(att.checkInTime, att.checkOutTime) ? (calculateHours(att.checkInTime, att.checkOutTime)).toFixed(1) + 'س' : '0.0س'}</span></td>
                     <td>
                         <div class="action-buttons">
                             <button class="btn-action btn-view btn-sm" onclick="viewEmployeeDetails('${att.employee?._id}')" title="عرض التفاصيل">
@@ -882,7 +876,7 @@
       if (!scans || scans.length === 0) return '';
 
       const scanHtml = scans.slice(0, 3).map(scan => {
-        const time = formatEgyptTime(scan.scanTime);
+        const time = formatTime(scan.scanTime);
         return `<span class="scan-badge">${time}</span>`;
       }).join('');
 

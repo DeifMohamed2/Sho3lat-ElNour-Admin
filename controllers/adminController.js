@@ -3566,18 +3566,16 @@ const employeeAttendanceDashboard_Get = async (req, res) => {
       .sort({ status: 1, 'employee.employeeName': 1 })
       .lean(); // Convert to plain objects for easier manipulation
 
-    // Normalize data: if checkInTime is null but checkOutTime exists, use checkOutTime as checkInTime for display
-    attendance = attendance.map(att => {
-      if (!att.checkInTime && att.checkOutTime) {
-        // Create a normalized version for display (don't modify the actual document)
-        att.checkInTime = att.checkOutTime;
-        // Recalculate totalHours as 0 since both times are the same
-        if (!att.totalHours || att.totalHours === 0) {
-          att.totalHours = 0;
-        }
-      }
-      return att;
-    });
+    // Filter out records from departed tab where checkOutTime is the same as checkInTime
+    // (meaning they haven't actually checked out yet)
+    if (tab === 'departed') {
+      attendance = attendance.filter(att => {
+        if (!att.checkInTime || !att.checkOutTime) return false;
+        // Check if check-out time is actually different from check-in time (at least 1 minute difference)
+        const timeDiff = Math.abs(new Date(att.checkOutTime).getTime() - new Date(att.checkInTime).getTime());
+        return timeDiff > 60000; // 1 minute in milliseconds
+      });
+    }
 
     // Apply employee type filter on populated data
     if (employeeType) {
@@ -3651,7 +3649,18 @@ const exportEmployeeAttendanceDashboard = async (req, res) => {
         'employee',
         'employeeName employeeCode employeeType employeePhoneNumber'
       )
-      .sort({ status: 1, 'employee.employeeName': 1 });
+      .sort({ status: 1, 'employee.employeeName': 1 })
+      .lean();
+
+    // Filter out records from departed tab where checkOutTime is the same as checkInTime
+    if (tab === 'departed') {
+      attendance = attendance.filter(att => {
+        if (!att.checkInTime || !att.checkOutTime) return false;
+        // Check if check-out time is actually different from check-in time (at least 1 minute difference)
+        const timeDiff = Math.abs(new Date(att.checkOutTime).getTime() - new Date(att.checkInTime).getTime());
+        return timeDiff > 60000; // 1 minute in milliseconds
+      });
+    }
 
     if (employeeType) {
       attendance = attendance.filter(att => att.employee?.employeeType === employeeType);
