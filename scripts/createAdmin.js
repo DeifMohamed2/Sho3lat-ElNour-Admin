@@ -2,7 +2,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const Admin = require('../models/admin');
 
-const dbURI = 'mongodb://localhost:27017/sho3latElnour';
+const dbURI = process.env.DATABASE_URL || 'mongodb://localhost:27017/sho3latElnour';
 
 async function createAdmin() {
   try {
@@ -24,15 +24,21 @@ async function createAdmin() {
 
     if (existingAdmin) {
       console.log(
-        '❌ Admin account already exists with phone number:',
+        '⚠️  Admin account already exists with phone number:',
         adminData.phoneNumber
       );
       console.log('Admin ID:', existingAdmin._id);
+      
+      // Update password and role if needed
+      existingAdmin.password = adminData.password;
+      existingAdmin.role = adminData.role;
+      await existingAdmin.save();
 
-      // Ask if you want to update password
-      console.log(
-        '\nTo update the password, delete the existing admin and run this script again.'
-      );
+      console.log('✅ Admin account password updated successfully!');
+      console.log('==================================');
+      console.log('Phone Number:', adminData.phoneNumber);
+      console.log('Password:', adminData.password);
+      console.log('==================================');
     } else {
       // Create new admin
       const admin = new Admin(adminData);

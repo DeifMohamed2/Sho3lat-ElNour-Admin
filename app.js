@@ -45,10 +45,11 @@ app.set('view engine', 'ejs');
 // listen for requests
 
 app.use(cors());
-// ZKTeco devices send form-data and text, so we need to handle both
-app.use(express.text({ type: '*/*' })); // For raw text from ZKTeco
+// Parse JSON first for API routes
 app.use(express.json()); // For JSON
-app.use(express.urlencoded({ extended: true })); // For form-data from ZKTeco
+app.use(express.urlencoded({ extended: true })); // For form-data
+// ZKTeco devices send raw text, so handle text for webhook routes only
+app.use('/webhook', express.text({ type: '*/*' })); // For raw text from ZKTeco webhooks only
 app.use(morgan('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser());
@@ -76,7 +77,7 @@ app.get('/assets/signing/digital-certificate.txt', (req, res) => {
 app.use('/', mainRoute);
 app.use('/admin', adminRoute);
 app.use('/api/parent', parentRoute); // Parent Mobile API
-app.use('/webhook', webhookRoute); // ZKTeco Webhook Routes
+app.use('/', webhookRoute); // ZKTeco Webhook Routes
 
 app.use((req, res) => {
   res.status(404).render('404', { title: '404' });

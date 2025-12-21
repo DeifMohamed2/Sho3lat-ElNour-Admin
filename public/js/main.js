@@ -13,23 +13,23 @@ Form.addEventListener('submit', async (event) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
-    })
-    const responseData = await response.json();
+    });
+    
+    let responseData;
+    try {
+        responseData = await response.json();
+    } catch (error) {
+        console.error('Error parsing response:', error);
+        alert('Error: Invalid response from server');
+        return;
+    }
+    
     if (response.ok) {
         console.log(responseData);
-        if(responseData.role === 'Admin'){
-            window.location.href = '/admin/employee';
-        }
-        else if(responseData.role === 'Employee'){
-            window.location.href = '/employee/dashboard';
-        }
-        else if(responseData.role === 'Supervisor'){
-            window.location.href = '/superviser/employee';
-        }
-
-    }else{
-        alert('Account Not Found');
+        // Always redirect to admin dashboard since only admin login is supported
+        window.location.href = '/admin/employee';
+    } else {
+        alert(responseData.message || 'Account Not Found');
         return;
-
     }
 });
