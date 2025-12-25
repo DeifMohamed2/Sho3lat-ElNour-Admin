@@ -268,8 +268,13 @@
             </label>
             <div class="time-input-group">
               <select class="form-select" id="studentWorkStartHour" name="studentWorkStartHour" required>
-                <% for(let h = 0; h <= 23; h++) { %>
-                  <option value="<%= h %>"><%= h.toString().padStart(2, '0') %></option>
+                <option value="0">12 AM</option>
+                <% for(let h = 1; h <= 11; h++) { %>
+                  <option value="<%= h %>"><%= h %> AM</option>
+                <% } %>
+                <option value="12">12 PM</option>
+                <% for(let h = 13; h <= 23; h++) { %>
+                  <option value="<%= h %>"><%= h - 12 %> PM</option>
                 <% } %>
               </select>
               <span class="time-separator">:</span>
@@ -293,8 +298,13 @@
             </label>
             <div class="time-input-group">
               <select class="form-select" id="studentLateHour" name="studentLateThresholdHour" required>
-                <% for(let h = 0; h <= 23; h++) { %>
-                  <option value="<%= h %>"><%= h.toString().padStart(2, '0') %></option>
+                <option value="0">12 AM</option>
+                <% for(let h = 1; h <= 11; h++) { %>
+                  <option value="<%= h %>"><%= h %> AM</option>
+                <% } %>
+                <option value="12">12 PM</option>
+                <% for(let h = 13; h <= 23; h++) { %>
+                  <option value="<%= h %>"><%= h - 12 %> PM</option>
                 <% } %>
               </select>
               <span class="time-separator">:</span>
@@ -318,8 +328,13 @@
             </label>
             <div class="time-input-group">
               <select class="form-select" id="studentCheckOutHour" name="studentCheckOutThresholdHour" required>
-                <% for(let h = 0; h <= 23; h++) { %>
-                  <option value="<%= h %>"><%= h.toString().padStart(2, '0') %></option>
+                <option value="0">12 AM</option>
+                <% for(let h = 1; h <= 11; h++) { %>
+                  <option value="<%= h %>"><%= h %> AM</option>
+                <% } %>
+                <option value="12">12 PM</option>
+                <% for(let h = 13; h <= 23; h++) { %>
+                  <option value="<%= h %>"><%= h - 12 %> PM</option>
                 <% } %>
               </select>
               <span class="time-separator">:</span>
@@ -354,8 +369,13 @@
             </label>
             <div class="time-input-group">
               <select class="form-select" id="employeeWorkStartHour" name="employeeWorkStartHour" required>
-                <% for(let h = 0; h <= 23; h++) { %>
-                  <option value="<%= h %>"><%= h.toString().padStart(2, '0') %></option>
+                <option value="0">12 AM</option>
+                <% for(let h = 1; h <= 11; h++) { %>
+                  <option value="<%= h %>"><%= h %> AM</option>
+                <% } %>
+                <option value="12">12 PM</option>
+                <% for(let h = 13; h <= 23; h++) { %>
+                  <option value="<%= h %>"><%= h - 12 %> PM</option>
                 <% } %>
               </select>
               <span class="time-separator">:</span>
@@ -379,8 +399,13 @@
             </label>
             <div class="time-input-group">
               <select class="form-select" id="employeeLateHour" name="employeeLateThresholdHour" required>
-                <% for(let h = 0; h <= 23; h++) { %>
-                  <option value="<%= h %>"><%= h.toString().padStart(2, '0') %></option>
+                <option value="0">12 AM</option>
+                <% for(let h = 1; h <= 11; h++) { %>
+                  <option value="<%= h %>"><%= h %> AM</option>
+                <% } %>
+                <option value="12">12 PM</option>
+                <% for(let h = 13; h <= 23; h++) { %>
+                  <option value="<%= h %>"><%= h - 12 %> PM</option>
                 <% } %>
               </select>
               <span class="time-separator">:</span>
@@ -404,8 +429,13 @@
             </label>
             <div class="time-input-group">
               <select class="form-select" id="employeeCheckOutHour" name="employeeCheckOutThresholdHour" required>
-                <% for(let h = 0; h <= 23; h++) { %>
-                  <option value="<%= h %>"><%= h.toString().padStart(2, '0') %></option>
+                <option value="0">12 AM</option>
+                <% for(let h = 1; h <= 11; h++) { %>
+                  <option value="<%= h %>"><%= h %> AM</option>
+                <% } %>
+                <option value="12">12 PM</option>
+                <% for(let h = 13; h <= 23; h++) { %>
+                  <option value="<%= h %>"><%= h - 12 %> PM</option>
                 <% } %>
               </select>
               <span class="time-separator">:</span>
