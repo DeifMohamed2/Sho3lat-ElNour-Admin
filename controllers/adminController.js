@@ -4267,6 +4267,30 @@ const resetAttendanceSettings = async (req, res) => {
   }
 };
 
+// ==================== AUTOMATED ABSENCE MARKING ====================
+
+// Manual trigger for absence marking (for testing)
+const triggerAbsenceMarking = async (req, res) => {
+  try {
+    const { markAbsentStudents } = require('../services/absenceMarker');
+    
+    console.log('\n🔔 Manual absence marking triggered by admin');
+    const result = await markAbsentStudents();
+    
+    res.json({
+      success: true,
+      message: 'Absence marking completed',
+      ...result
+    });
+  } catch (error) {
+    console.error('Error in manual absence marking:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
 // ==================== MODULE EXPORTS ====================
 
 module.exports = {
@@ -4346,4 +4370,7 @@ module.exports = {
   getAttendanceSettingsData,
   updateAttendanceSettings,
   resetAttendanceSettings,
+
+  // Automated Absence Marking
+  triggerAbsenceMarking,
 };

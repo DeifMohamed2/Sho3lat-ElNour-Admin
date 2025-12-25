@@ -457,4 +457,9 @@ router.get('/attendance-settings-data', authMiddleware, adminController.getAtten
 router.post('/attendance-settings', authMiddleware, adminController.updateAttendanceSettings);
 router.post('/attendance-settings/reset', authMiddleware, adminController.resetAttendanceSettings);
 
+// ==================== AUTOMATED ABSENCE MARKING ====================
+
+// Manual trigger for absence marking (for testing/admin control)
+router.post('/trigger-absence-marking', authMiddleware, adminController.triggerAbsenceMarking);
+
 module.exports = router;

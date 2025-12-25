@@ -33,8 +33,38 @@ mongoose
     app.listen(8319, () => {
       console.log('✅ Server running on http://localhost:8319');
     });
+    
+    // Initialize automated absence marking scheduler
+    initializeScheduler();
   })
   .catch(console.error);
+
+/* =======================
+   AUTOMATED SCHEDULERS
+======================= */
+async function initializeScheduler() {
+  try {
+    const scheduler = require('./utils/scheduler');
+    const { markAbsentStudents, getAbsenceMarkingSchedule } = require('./services/absenceMarker');
+    
+    // Get the schedule based on attendance settings
+    const cronExpression = await getAbsenceMarkingSchedule();
+    
+    // Schedule the absence marking job
+    scheduler.scheduleJob(
+      'absence-marker',
+      cronExpression,
+      async () => {
+        console.log('\n🔔 Automated absence marking triggered by scheduler');
+        await markAbsentStudents();
+      }
+    );
+    
+    console.log('✅ Automated absence marking scheduler initialized');
+  } catch (error) {
+    console.error('❌ Error initializing scheduler:', error);
+  }
+}
 
 /* =======================
    VIEW ENGINE
