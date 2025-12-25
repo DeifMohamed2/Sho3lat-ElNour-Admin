@@ -173,23 +173,24 @@ attendanceSettingsSchema.statics.resetToDefaults = async function () {
   });
 };
 
-// Helper method to check if a time is after the late threshold
+// Helper methods to check timing thresholds
+// Using minutes-based comparison for clarity and reliability
 attendanceSettingsSchema.methods.isStudentLate = function (hour, minute) {
-  if (hour > this.studentLateThresholdHour) return true;
-  if (hour === this.studentLateThresholdHour && minute > this.studentLateThresholdMinute) return true;
-  return false;
+  const scanTimeInMinutes = hour * 60 + minute;
+  const thresholdInMinutes = this.studentLateThresholdHour * 60 + this.studentLateThresholdMinute;
+  return scanTimeInMinutes >= thresholdInMinutes;
 };
 
 attendanceSettingsSchema.methods.isEmployeeLate = function (hour, minute) {
-  if (hour > this.employeeLateThresholdHour) return true;
-  if (hour === this.employeeLateThresholdHour && minute > this.employeeLateThresholdMinute) return true;
-  return false;
+  const scanTimeInMinutes = hour * 60 + minute;
+  const thresholdInMinutes = this.employeeLateThresholdHour * 60 + this.employeeLateThresholdMinute;
+  return scanTimeInMinutes >= thresholdInMinutes;
 };
 
 attendanceSettingsSchema.methods.isCheckOutTime = function (hour, minute) {
-  if (hour > this.employeeCheckOutThresholdHour) return true;
-  if (hour === this.employeeCheckOutThresholdHour && minute >= this.employeeCheckOutThresholdMinute) return true;
-  return false;
+  const scanTimeInMinutes = hour * 60 + minute;
+  const thresholdInMinutes = this.employeeCheckOutThresholdHour * 60 + this.employeeCheckOutThresholdMinute;
+  return scanTimeInMinutes >= thresholdInMinutes;
 };
 
 const AttendanceSettings = mongoose.model('AttendanceSettings', attendanceSettingsSchema);

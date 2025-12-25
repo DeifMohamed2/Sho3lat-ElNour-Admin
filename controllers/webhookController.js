@@ -7,23 +7,6 @@ const EmployeeAttendance = require('../models/employeeAttendance');
 const AttendanceSettings = require('../models/AttendanceSettings');
 const { parseToEgyptTime, getEgyptDayBoundaries, formatEgyptDate } = require('../utils/timezone');
 
-// Settings cache to avoid database queries on every webhook call
-let settingsCache = null;
-let settingsCacheTime = null;
-const CACHE_DURATION = 60000; // 1 minute
-
-// Helper function to get attendance settings (with caching)
-async function getAttendanceSettings() {
-  const now = Date.now();
-  if (settingsCache && settingsCacheTime && (now - settingsCacheTime < CACHE_DURATION)) {
-    return settingsCache;
-  }
-  
-  settingsCache = await AttendanceSettings.getSettings();
-  settingsCacheTime = now;
-  return settingsCache;
-}
-
 /* =======================
    DEVICE PING
 ======================= */
