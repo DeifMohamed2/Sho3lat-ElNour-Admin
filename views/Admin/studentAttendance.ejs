@@ -106,6 +106,76 @@
       border-color: rgba(0, 0, 0, 0.3);
     }
 
+    /* Professional Row Color Coding */
+    .row-departed {
+      background-color: #d4edda !important;
+      border-right: 4px solid #28a745 !important;
+    }
+
+    .row-departed td {
+      background-color: #d4edda !important;
+    }
+
+    .row-late {
+      background-color: #fff3cd !important;
+      border-right: 4px solid #ffc107 !important;
+    }
+
+    .row-late td {
+      background-color: #fff3cd !important;
+    }
+
+    .row-absent {
+      background-color: #f8d7da !important;
+      border-right: 4px solid #dc3545 !important;
+    }
+
+    .row-absent td {
+      background-color: #f8d7da !important;
+    }
+
+    .row-present {
+      background-color: #fff !important;
+      border-right: 4px solid #0d6efd !important;
+    }
+
+    .row-present td {
+      background-color: #fff !important;
+    }
+
+    /* Departure Status Badge */
+    .departure-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .departure-badge.departed {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: white;
+      box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+
+    .departure-badge.pending {
+      background: #f8f9fa;
+      color: #6c757d;
+      border: 1px dashed rgba(0, 0, 0, 0.3);
+    }
+
+    /* Duration Badge */
+    .duration-badge {
+      background: linear-gradient(135deg, #6c757d, #495057);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 15px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
     #presentTable,
     #absentTable,
     #departedTable {
@@ -463,12 +533,6 @@
             الغياب
           </button>
         </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="departed-tab" data-bs-toggle="tab" data-bs-target="#departed" type="button">
-            <i class="material-symbols-rounded me-2" style="font-size: 18px; vertical-align: middle;">logout</i>
-            الانصراف
-          </button>
-        </li>
       </ul>
 
       <!-- Tab Content -->
@@ -487,13 +551,14 @@
                       <th>الصف</th>
                       <th>وقت الحضور</th>
                       <th>الحالة</th>
-                      <th>طريقة التحقق</th>
+                      <th>الانصراف</th>
+                      <th>المدة</th>
                       <th>الإجراءات</th>
                     </tr>
                   </thead>
                   <tbody id="presentTableBody">
                     <tr>
-                      <td colspan="8" class="text-center py-5">
+                      <td colspan="9" class="text-center py-5">
                         <div class="spinner-border text-primary" role="status">
                           <span class="visually-hidden">جاري التحميل...</span>
                         </div>
@@ -526,39 +591,6 @@
                   <tbody id="absentTableBody">
                     <tr>
                       <td colspan="7" class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status">
-                          <span class="visually-hidden">جاري التحميل...</span>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Departed Students -->
-        <div class="tab-pane fade" id="departed" role="tabpanel">
-          <div class="card">
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-hover align-items-center mb-0" id="departedTable">
-                  <thead>
-                    <tr>
-                      <th class="text-center">#</th>
-                      <th>الطالب</th>
-                      <th>الكود</th>
-                      <th>الصف</th>
-                      <th>وقت الحضور</th>
-                      <th>وقت الانصراف</th>
-                      <th>المدة</th>
-                      <th>الإجراءات</th>
-                    </tr>
-                  </thead>
-                  <tbody id="departedTableBody">
-                    <tr>
-                      <td colspan="8" class="text-center py-5">
                         <div class="spinner-border text-primary" role="status">
                           <span class="visually-hidden">جاري التحميل...</span>
                         </div>
@@ -646,50 +678,74 @@
     function renderTables() {
       renderPresentTable();
       renderAbsentTable();
-      renderDepartedTable();
     }
 
-    // Render present students
+    // Render present students with color coding
     function renderPresentTable() {
       const tbody = document.getElementById('presentTableBody');
       const present = filteredData.filter(a => (a.status === 'Present' || a.status === 'Late') && a.entryTime);
 
       if (present.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted">لا توجد بيانات</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5 text-muted">لا توجد بيانات</td></tr>';
         return;
       }
 
-      tbody.innerHTML = present.map((att, index) => `
-                <tr>
-                    <td class="text-center">${index + 1}</td>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <div class="avatar avatar-sm me-2" style="width: 32px; height: 32px; border-radius: 50%; background-color: #f8f9fa; border: 2px solid rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;">
-                                <span style="color: #000; font-weight: 600;">${att.student?.studentName?.charAt(0) || 'ط'}</span>
-                            </div>
-                            <span class="fw-bold">${att.student?.studentName || 'غير معروف'}</span>
-                        </div>
-                    </td>
-                    <td><span class="badge">${att.student?.studentCode || 'N/A'}</span></td>
-                    <td>${att.class?.className || 'غير محدد'}</td>
-                    <td>
-                        <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">schedule</i>
-                        ${new Date(att.entryTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' })}
-                    </td>
-                    <td><span class="status-badge status-${att.status.toLowerCase()}">${getStatusText(att.status)}</span></td>
-                    <td><i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">fingerprint</i>${att.verifyMethod || 'Face Recognition'}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-view btn-sm" onclick="viewStudentDetails('${att.student?._id}')" title="عرض التفاصيل">
-                                <i class="material-symbols-rounded">visibility</i>
-                            </button>
-                            <button class="btn-action btn-delete btn-sm" onclick="deleteAttendance('${att._id}', '${att.student?.studentName || 'هذا السجل'}')" title="حذف السجل">
-                                <i class="material-symbols-rounded">delete</i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+      tbody.innerHTML = present.map((att, index) => {
+        // Determine row class based on status
+        let rowClass = 'row-present';
+        if (att.exitTime) {
+          rowClass = 'row-departed';
+        } else if (att.status === 'Late') {
+          rowClass = 'row-late';
+        }
+
+        // Calculate duration if departed
+        const duration = att.exitTime ? calculateDuration(att.entryTime, att.exitTime) : '-';
+
+        // Format departure time or show pending badge
+        const departureDisplay = att.exitTime 
+          ? `<span class="departure-badge departed">
+               <i class="material-symbols-rounded" style="font-size: 14px;">check_circle</i>
+               ${new Date(att.exitTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' })}
+             </span>`
+          : `<span class="departure-badge pending">
+               <i class="material-symbols-rounded" style="font-size: 14px;">schedule</i>
+               في الانتظار
+             </span>`;
+
+        return `
+          <tr class="${rowClass}">
+            <td class="text-center">${index + 1}</td>
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="avatar avatar-sm me-2" style="width: 32px; height: 32px; border-radius: 50%; background-color: ${att.exitTime ? '#28a745' : '#f8f9fa'}; border: 2px solid rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;">
+                  <span style="color: ${att.exitTime ? '#fff' : '#000'}; font-weight: 600;">${att.student?.studentName?.charAt(0) || 'ط'}</span>
+                </div>
+                <span class="fw-bold">${att.student?.studentName || 'غير معروف'}</span>
+              </div>
+            </td>
+            <td><span class="badge">${att.student?.studentCode || 'N/A'}</span></td>
+            <td>${att.class?.className || 'غير محدد'}</td>
+            <td>
+              <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">login</i>
+              ${new Date(att.entryTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' })}
+            </td>
+            <td><span class="status-badge status-${att.status.toLowerCase()}">${getStatusText(att.status)}</span></td>
+            <td>${departureDisplay}</td>
+            <td>${att.exitTime ? `<span class="duration-badge">${duration}</span>` : '<span style="color: #6c757d;">-</span>'}</td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn-action btn-view btn-sm" onclick="viewStudentDetails('${att.student?._id}')" title="عرض التفاصيل">
+                  <i class="material-symbols-rounded">visibility</i>
+                </button>
+                <button class="btn-action btn-delete btn-sm" onclick="deleteAttendance('${att._id}', '${att.student?.studentName || 'هذا السجل'}')" title="حذف السجل">
+                  <i class="material-symbols-rounded">delete</i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
     // Render absent students
@@ -731,54 +787,6 @@
             `).join('');
     }
 
-    // Render departed students
-    function renderDepartedTable() {
-      const tbody = document.getElementById('departedTableBody');
-      const departed = filteredData.filter(a => a.exitTime);
-
-      if (departed.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted">لا توجد بيانات</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = departed.map((att, index) => {
-        const duration = calculateDuration(att.entryTime, att.exitTime);
-        return `
-                    <tr>
-                        <td class="text-center">${index + 1}</td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                            <div class="avatar avatar-sm me-2" style="width: 32px; height: 32px; border-radius: 50%; background-color: #f8f9fa; border: 2px solid rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;">
-                                <span style="color: #000; font-weight: 600;">${att.student?.studentName?.charAt(0) || 'ط'}</span>
-                            </div>
-                                <span class="fw-bold">${att.student?.studentName || 'غير معروف'}</span>
-                            </div>
-                        </td>
-                        <td><span class="badge">${att.student?.studentCode || 'N/A'}</span></td>
-                        <td>${att.class?.className || 'غير محدد'}</td>
-                        <td>
-                            <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">login</i>
-                            ${new Date(att.entryTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' })}
-                        </td>
-                        <td>
-                            <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">logout</i>
-                            ${new Date(att.exitTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' })}
-                        </td>
-                        <td><span class="badge">${duration}</span></td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-action btn-view btn-sm" onclick="viewStudentDetails('${att.student?._id}')" title="عرض التفاصيل">
-                                    <i class="material-symbols-rounded">visibility</i>
-                                </button>
-                                <button class="btn-action btn-delete btn-sm" onclick="deleteAttendance('${att._id}', '${att.student?.studentName || 'هذا السجل'}')" title="حذف السجل">
-                                    <i class="material-symbols-rounded">delete</i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-      }).join('');
-    }
 
     // Apply filters - reload data from API
     function applyFilters() {
@@ -896,16 +904,12 @@
     // Tab event listeners
     const presentTab = document.getElementById('present-tab');
     const absentTab = document.getElementById('absent-tab');
-    const departedTab = document.getElementById('departed-tab');
 
     if (presentTab) {
       presentTab.addEventListener('shown.bs.tab', () => handleTabChange('present'));
     }
     if (absentTab) {
       absentTab.addEventListener('shown.bs.tab', () => handleTabChange('absent'));
-    }
-    if (departedTab) {
-      departedTab.addEventListener('shown.bs.tab', () => handleTabChange('departed'));
     }
 
     // Debounce function
