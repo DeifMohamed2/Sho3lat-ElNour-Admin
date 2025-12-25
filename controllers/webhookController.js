@@ -275,6 +275,12 @@ async function handleStudent(student, scanTime, today, settings, deviceSN) {
   // Check if student is late using settings
   const isLate = settings.isStudentLate(scanHour, scanMinute);
   
+  // Debug logging
+  console.log(`🔍 Student Late Check - ${student.studentName}:`);
+  console.log(`   Scan Time: ${scanHour}:${scanMinute.toString().padStart(2, '0')}`);
+  console.log(`   Late Threshold: ${settings.studentLateThresholdHour}:${settings.studentLateThresholdMinute.toString().padStart(2, '0')}`);
+  console.log(`   Result: ${isLate ? 'LATE ❌' : 'ON TIME ✅'}`);
+  
   // Check if this is check-out time (after check-out threshold)
   const isCheckOutTime = scanHour > settings.studentCheckOutThresholdHour || 
     (scanHour === settings.studentCheckOutThresholdHour && scanMinute >= settings.studentCheckOutThresholdMinute);
