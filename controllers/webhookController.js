@@ -183,8 +183,8 @@ ${status ? `📊 Status: ${status}` : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `);
 
-    // Get attendance settings
-    const settings = await getAttendanceSettings();
+    // Get attendance settings directly from database (no caching)
+    const settings = await AttendanceSettings.getSettings();
     
     // Get day boundaries in Egypt timezone
     const { start: today } = getEgyptDayBoundaries(scanTime);
