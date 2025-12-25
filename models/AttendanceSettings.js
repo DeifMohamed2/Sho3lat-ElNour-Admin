@@ -178,13 +178,13 @@ attendanceSettingsSchema.statics.resetToDefaults = async function () {
 attendanceSettingsSchema.methods.isStudentLate = function (hour, minute) {
   const scanTimeInMinutes = hour * 60 + minute;
   const thresholdInMinutes = this.studentLateThresholdHour * 60 + this.studentLateThresholdMinute;
-  return scanTimeInMinutes >= thresholdInMinutes;
+  return scanTimeInMinutes > thresholdInMinutes;
 };
 
 attendanceSettingsSchema.methods.isEmployeeLate = function (hour, minute) {
   const scanTimeInMinutes = hour * 60 + minute;
   const thresholdInMinutes = this.employeeLateThresholdHour * 60 + this.employeeLateThresholdMinute;
-  return scanTimeInMinutes >= thresholdInMinutes;
+  return scanTimeInMinutes > thresholdInMinutes;
 };
 
 attendanceSettingsSchema.methods.isCheckOutTime = function (hour, minute) {
