@@ -5,7 +5,7 @@ const Employee = require('../models/employee');
 const Attendance = require('../models/attendance');
 const EmployeeAttendance = require('../models/employeeAttendance');
 const AttendanceSettings = require('../models/AttendanceSettings');
-const { parseToEgyptTime, getEgyptDayBoundaries, formatEgyptDate } = require('../utils/timezone');
+const { parseToEgyptTime, getEgyptDayBoundaries, formatEgyptDate, getEgyptHour, getEgyptMinute } = require('../utils/timezone');
 
 /* =======================
    DEVICE PING
@@ -252,8 +252,10 @@ ${status ? `📊 Status: ${status}` : ''}
    STUDENT LOGIC
 ======================= */
 async function handleStudent(student, scanTime, today, settings, deviceSN) {
-  const scanHour = scanTime.getHours();
-  const scanMinute = scanTime.getMinutes();
+  // CRITICAL FIX: Use Egypt timezone functions to get correct hour/minute
+  // Using native getHours()/getMinutes() would return server's local timezone, not Egypt!
+  const scanHour = getEgyptHour(scanTime);
+  const scanMinute = getEgyptMinute(scanTime);
   
   // Check if student is late using settings
   const scanTimeInMinutes = scanHour * 60 + scanMinute;
@@ -308,8 +310,10 @@ async function handleEmployee(employee, scanTime, today, settings, deviceSN, ver
     date: today,
   });
 
-  const scanHour = scanTime.getHours();
-  const scanMinute = scanTime.getMinutes();
+  // CRITICAL FIX: Use Egypt timezone functions to get correct hour/minute
+  // Using native getHours()/getMinutes() would return server's local timezone, not Egypt!
+  const scanHour = getEgyptHour(scanTime);
+  const scanMinute = getEgyptMinute(scanTime);
   
   // Determine if this is check-out time using settings
   const isCheckOutTime = settings.isCheckOutTime(scanHour, scanMinute);

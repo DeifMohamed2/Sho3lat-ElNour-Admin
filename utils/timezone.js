@@ -110,6 +110,28 @@ function formatEgyptTime24(date, includeSeconds = false) {
   return moment.tz(date, EGYPT_TIMEZONE).format(format);
 }
 
+/**
+ * Get hour from a Date in Egypt timezone (0-23)
+ * IMPORTANT: Using moment.tz() ensures we get Egypt timezone hours,
+ * not the server's local timezone hours
+ * @param {Date} date - Date to extract hour from
+ * @returns {number} Hour in Egypt timezone (0-23)
+ */
+function getEgyptHour(date) {
+  if (!date) return 0;
+  return moment.tz(date, EGYPT_TIMEZONE).hour();
+}
+
+/**
+ * Get minute from a Date in Egypt timezone (0-59)
+ * @param {Date} date - Date to extract minute from
+ * @returns {number} Minute in Egypt timezone (0-59)
+ */
+function getEgyptMinute(date) {
+  if (!date) return 0;
+  return moment.tz(date, EGYPT_TIMEZONE).minute();
+}
+
 module.exports = {
   parseToEgyptTime,
   getEgyptDate,
@@ -119,5 +141,7 @@ module.exports = {
   getEgyptDayBoundaries,
   formatEgyptTime,
   formatEgyptTime24,
+  getEgyptHour,
+  getEgyptMinute,
 };
 
