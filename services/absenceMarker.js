@@ -111,21 +111,34 @@ async function markAbsentStudents() {
 
 /**
  * Get the cron schedule based on attendance settings
- * Returns cron expression to run 1 hour after checkout time
+ * Returns cron expression to run after checkout time + delay
  */
 async function getAbsenceMarkingSchedule() {
   try {
     const settings = await AttendanceSettings.getSettings();
     
-    // Run 1 hour after student checkout time
-    const hour = (settings.studentCheckOutThresholdHour + 1) % 24;
-    const minute = settings.studentCheckOutThresholdMinute;
+    // Get checkout time in total minutes
+    const checkoutTimeMinutes = settings.studentCheckOutThresholdHour * 60 + settings.studentCheckOutThresholdMinute;
+    
+    // Add the configurable delay (default: 1 minute)
+    const delayMinutes = settings.absenceMarkingDelayMinutes || 1;
+    let scheduledMinutes = checkoutTimeMinutes + delayMinutes;
+    
+    // Handle overflow past midnight
+    if (scheduledMinutes >= 24 * 60) {
+      scheduledMinutes = scheduledMinutes - (24 * 60);
+    }
+    
+    // Convert back to hours and minutes
+    const hour = Math.floor(scheduledMinutes / 60);
+    const minute = scheduledMinutes % 60;
     
     // Cron format: minute hour * * *
     // Runs daily at the specified time
     const cronExpression = `${minute} ${hour} * * *`;
     
     console.log(`📅 Absence marking scheduled for: ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} daily`);
+    console.log(`   (Checkout: ${settings.studentCheckOutThresholdHour.toString().padStart(2, '0')}:${settings.studentCheckOutThresholdMinute.toString().padStart(2, '0')} + ${delayMinutes} min delay)`);
     console.log(`   Cron expression: ${cronExpression}`);
     
     return cronExpression;
@@ -136,7 +149,39 @@ async function getAbsenceMarkingSchedule() {
   }
 }
 
+/**
+ * Reschedule the absence marking job
+ * Called when settings are updated
+ */
+async function rescheduleAbsenceMarking() {
+  try {
+    const scheduler = require('../utils/scheduler');
+    const cronExpression = await getAbsenceMarkingSchedule();
+    
+    if (scheduler.hasJob('absence-marker')) {
+      scheduler.rescheduleJob('absence-marker', cronExpression);
+      console.log('✅ Absence marking job rescheduled');
+    } else {
+      // Job doesn't exist, create it
+      scheduler.scheduleJob(
+        'absence-marker',
+        cronExpression,
+        async () => {
+          console.log('\n🔔 Automated absence marking triggered by scheduler');
+          await markAbsentStudents();
+        }
+      );
+    }
+    
+    return { success: true, cronExpression };
+  } catch (error) {
+    console.error('Error rescheduling absence marking:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 module.exports = {
   markAbsentStudents,
-  getAbsenceMarkingSchedule
+  getAbsenceMarkingSchedule,
+  rescheduleAbsenceMarking
 };

@@ -452,6 +452,47 @@
           </div>
         </div>
 
+        <!-- Automated Absence Marking Settings Card -->
+        <div class="settings-card">
+          <div class="settings-header">
+            <h3>
+              <i class="material-symbols-rounded">event_busy</i>
+              تسجيل الغياب التلقائي
+            </h3>
+            <p>إعداد توقيت تسجيل الغياب التلقائي للطلاب الذين لم يحضروا</p>
+          </div>
+
+          <!-- Absence Marking Delay -->
+          <div class="setting-row">
+            <label class="form-label">
+              <i class="material-symbols-rounded icon-label">timer</i>
+              وقت التأخير بعد الانصراف (بالدقائق)
+            </label>
+            <div class="time-input-group">
+              <input type="number" class="form-control" id="absenceMarkingDelay" 
+                     name="absenceMarkingDelayMinutes" 
+                     min="0" max="120" value="1" 
+                     style="max-width: 100px; text-align: center;" required>
+              <span class="ms-2">دقيقة</span>
+            </div>
+            <div class="help-text">
+              <i class="material-symbols-rounded" style="font-size: 16px;">info</i>
+              بعد انتهاء وقت الانصراف بهذه المدة، سيتم تسجيل الطلاب الذين لم يحضروا كغائبين تلقائياً
+            </div>
+          </div>
+
+          <!-- Next Scheduled Run Info -->
+          <div class="setting-row" style="background: rgba(40, 167, 69, 0.1); border-radius: 10px; padding: 15px;">
+            <div class="d-flex align-items-center">
+              <i class="material-symbols-rounded me-2" style="color: #28a745; font-size: 24px;">schedule</i>
+              <div>
+                <strong style="color: #28a745;">الجدول الزمني</strong>
+                <p id="scheduleInfo" class="mb-0 text-muted" style="font-size: 0.9rem;">سيتم تحديث الجدول عند حفظ الإعدادات</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Action Buttons -->
         <div class="d-flex gap-3 justify-content-end mb-4">
           <button type="button" class="btn btn-outline-danger" onclick="resetToDefaults()">
@@ -494,11 +535,45 @@
         document.getElementById('employeeLateMinute').value = settings.employeeLateThresholdMinute;
         document.getElementById('employeeCheckOutHour').value = settings.employeeCheckOutThresholdHour;
         document.getElementById('employeeCheckOutMinute').value = settings.employeeCheckOutThresholdMinute;
+        
+        // Populate absence marking delay
+        document.getElementById('absenceMarkingDelay').value = settings.absenceMarkingDelayMinutes || 1;
+        
+        // Update schedule info display
+        updateScheduleInfo();
       } catch (error) {
         console.error('Error loading settings:', error);
         showAlert('error', 'حدث خطأ في تحميل الإعدادات');
       }
     });
+
+    // Update schedule info display
+    function updateScheduleInfo() {
+      const checkoutHour = parseInt(document.getElementById('studentCheckOutHour').value) || 0;
+      const checkoutMinute = parseInt(document.getElementById('studentCheckOutMinute').value) || 0;
+      const delayMinutes = parseInt(document.getElementById('absenceMarkingDelay').value) || 1;
+      
+      // Calculate scheduled time
+      let scheduledMinutes = checkoutHour * 60 + checkoutMinute + delayMinutes;
+      if (scheduledMinutes >= 24 * 60) {
+        scheduledMinutes = scheduledMinutes - (24 * 60);
+      }
+      
+      const scheduledHour = Math.floor(scheduledMinutes / 60);
+      const scheduledMin = scheduledMinutes % 60;
+      
+      // Format time in 12-hour format
+      const period = scheduledHour >= 12 ? 'PM' : 'AM';
+      const displayHour = scheduledHour === 0 ? 12 : (scheduledHour > 12 ? scheduledHour - 12 : scheduledHour);
+      
+      document.getElementById('scheduleInfo').innerHTML = 
+        `سيتم تسجيل الغياب التلقائي يومياً الساعة <strong>${displayHour}:${scheduledMin.toString().padStart(2, '0')} ${period}</strong>`;
+    }
+
+    // Update schedule info when inputs change
+    document.getElementById('studentCheckOutHour').addEventListener('change', updateScheduleInfo);
+    document.getElementById('studentCheckOutMinute').addEventListener('change', updateScheduleInfo);
+    document.getElementById('absenceMarkingDelay').addEventListener('input', updateScheduleInfo);
 
     // Handle form submission
     document.getElementById('settingsForm').addEventListener('submit', async (e) => {

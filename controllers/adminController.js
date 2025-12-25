@@ -4212,6 +4212,7 @@ const updateAttendanceSettings = async (req, res) => {
       employeeLateThresholdMinute,
       employeeCheckOutThresholdHour,
       employeeCheckOutThresholdMinute,
+      absenceMarkingDelayMinutes,
     } = req.body;
 
     // Validate input
@@ -4231,6 +4232,12 @@ const updateAttendanceSettings = async (req, res) => {
     validateTime(employeeLateThresholdHour, employeeLateThresholdMinute, 'Employee late threshold');
     validateTime(employeeCheckOutThresholdHour, employeeCheckOutThresholdMinute, 'Employee check-out threshold');
 
+    // Validate absence marking delay
+    const delay = parseInt(absenceMarkingDelayMinutes) || 1;
+    if (delay < 0 || delay > 120) {
+      throw new Error('Absence marking delay must be between 0 and 120 minutes');
+    }
+
     // Update settings
     const settings = await AttendanceSettings.updateSettings({
       studentWorkStartHour,
@@ -4245,7 +4252,16 @@ const updateAttendanceSettings = async (req, res) => {
       employeeLateThresholdMinute,
       employeeCheckOutThresholdHour,
       employeeCheckOutThresholdMinute,
+      absenceMarkingDelayMinutes: delay,
     });
+
+    // Reschedule absence marking job with new settings
+    try {
+      const { rescheduleAbsenceMarking } = require('../services/absenceMarker');
+      await rescheduleAbsenceMarking();
+    } catch (scheduleError) {
+      console.error('Warning: Could not reschedule absence marking:', scheduleError);
+    }
 
     console.log('✅ Attendance settings updated:', settings);
     res.json({ success: true, settings });

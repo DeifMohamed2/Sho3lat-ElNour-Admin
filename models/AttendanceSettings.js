@@ -104,6 +104,18 @@ const attendanceSettingsSchema = new Schema(
       default: 0,
       required: true,
     },
+    
+    // ==================== AUTOMATED ABSENCE MARKING ====================
+    
+    // Delay in minutes after checkout time to run absence marking
+    // Default: 1 minute (runs almost immediately after checkout)
+    absenceMarkingDelayMinutes: {
+      type: Number,
+      min: 0,
+      max: 120, // Max 2 hours delay
+      default: 1, // 1 minute after checkout
+      required: true,
+    },
   },
   { timestamps: true }
 );
@@ -170,6 +182,9 @@ attendanceSettingsSchema.statics.resetToDefaults = async function () {
     employeeLateThresholdMinute: 15,
     employeeCheckOutThresholdHour: 15,
     employeeCheckOutThresholdMinute: 0,
+    
+    // Automated absence marking
+    absenceMarkingDelayMinutes: 1,
   });
 };
 
