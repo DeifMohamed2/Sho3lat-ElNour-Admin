@@ -60,6 +60,11 @@ const classSchema = new Schema(
       required: false,
       default: '',
     },
+    scheduleImage: {
+      type: String,
+      required: false,
+      default: '',
+    },
   },
   { timestamps: true }
 );

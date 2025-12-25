@@ -237,6 +237,7 @@ router.post('/add-class', authMiddleware, adminController.addClass);
 router.get('/get-class/:id', authMiddleware, adminController.getClass);
 router.put('/update-class/:id', authMiddleware, adminController.updateClass);
 router.delete('/delete-class/:id', authMiddleware, adminController.deleteClass);
+router.delete('/delete-schedule-image/:id', authMiddleware, adminController.deleteScheduleImage);
 
 // Student Logs (Audit) Routes
 // REMOVED: student-logs routes - replaced with student-attendance-log
@@ -445,5 +446,15 @@ router.get('/employee-attendance-log', authMiddleware, (req, res) => {
     path: '/admin/employee-attendance-log',
   });
 });
+
+// ==================== ATTENDANCE SETTINGS ====================
+
+// Attendance Settings Page - Main view
+router.get('/attendance-settings', authMiddleware, adminController.attendanceSettings_Get);
+
+// Attendance Settings - API endpoints
+router.get('/attendance-settings-data', authMiddleware, adminController.getAttendanceSettingsData);
+router.post('/attendance-settings', authMiddleware, adminController.updateAttendanceSettings);
+router.post('/attendance-settings/reset', authMiddleware, adminController.resetAttendanceSettings);
 
 module.exports = router;

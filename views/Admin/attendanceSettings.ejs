@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <%- include('partials/head') %>
+  <title>إعدادات الحضور - Sho3lat Elnour</title>
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+
+    .settings-card {
+      background: white;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .settings-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .settings-header {
+      border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+
+    .settings-header h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #000;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .settings-header p {
+      color: #666;
+      font-size: 0.9rem;
+      margin: 5px 0 0 0;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: #000;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-control,
+    .form-select {
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 10px 15px;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      background-color: #fff;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+      border-color: rgba(0, 0, 0, 0.5);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .time-input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .time-input-group select {
+      flex: 1;
+    }
+
+    .time-separator {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #000;
+    }
+
+    .form-switch {
+      padding-right: 2.5em;
+    }
+
+    .form-switch .form-check-input {
+      width: 3em;
+      height: 1.5em;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      background-color: #fff;
+      cursor: pointer;
+    }
+
+    .form-switch .form-check-input:checked {
+      background-color: #000;
+      border-color: #000;
+    }
+
+    .form-switch .form-check-input:focus {
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-check-label {
+      font-weight: 600;
+      color: #000;
+      cursor: pointer;
+    }
+
+    .btn {
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(120deg, #000 0%, #444 100%);
+      border: none;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(120deg, #111 0%, #555 100%);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-outline-dark {
+      background-color: #fff;
+      color: #000;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-outline-dark:hover {
+      background-color: #000;
+      color: #fff;
+      border-color: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-outline-danger {
+      background-color: #fff;
+      color: #dc3545;
+      border: 2px solid #dc3545;
+    }
+
+    .btn-outline-danger:hover {
+      background-color: #dc3545;
+      color: #fff;
+      border-color: #dc3545;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+
+    .page-header {
+      border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+      background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+      padding: 20px 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .page-header h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #000;
+      margin: 0;
+    }
+
+    .page-header p {
+      color: #666;
+      margin: 5px 0 0 0;
+    }
+
+    .help-text {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .setting-row {
+      margin-bottom: 25px;
+    }
+
+    .icon-label {
+      font-size: 18px;
+      vertical-align: middle;
+    }
+
+    .alert {
+      border: 2px solid;
+      border-radius: 8px;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .alert-success {
+      background-color: #d1e7dd;
+      border-color: #0f5132;
+      color: #0f5132;
+    }
+
+    .alert-danger {
+      background-color: #f8d7da;
+      border-color: #842029;
+      color: #842029;
+    }
+  </style>
+</head>
+
+<body class="g-sidenav-show rtl bg-gray-100">
+  <%- include('partials/aside') %>
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
+    <%- include('partials/nav') %>
+
+    <div class="container-fluid py-2">
+      <!-- Header -->
+      <div class="page-header">
+        <h2 class="mb-0">
+          <i class="material-symbols-rounded me-2" style="font-size: 28px; vertical-align: middle;">settings</i>
+          إعدادات الحضور والانصراف
+        </h2>
+        <p class="text-sm">تحكم في أوقات الحضور والتأخير والانصراف للطلاب والموظفين</p>
+      </div>
+
+      <!-- Alert Messages -->
+      <div class="alert alert-success" id="successAlert">
+        <i class="material-symbols-rounded me-2" style="vertical-align: middle;">check_circle</i>
+        <span id="successMessage">تم حفظ الإعدادات بنجاح!</span>
+      </div>
+      <div class="alert alert-danger" id="errorAlert">
+        <i class="material-symbols-rounded me-2" style="vertical-align: middle;">error</i>
+        <span id="errorMessage">حدث خطأ أثناء حفظ الإعدادات</span>
+      </div>
+
+      <form id="settingsForm">
+        <!-- Student Settings Card -->
+        <div class="settings-card">
+          <div class="settings-header">
+            <h3>
+              <i class="material-symbols-rounded">school</i>
+              إعدادات حضور الطلاب
+            </h3>
+            <p>تحديد أوقات الحضور والتأخير والانصراف المبكر للطلاب</p>
+          </div>
+
+          <!-- Student Late Threshold -->
+          <div class="setting-row">
+            <label class="form-label">
+              <i class="material-symbols-rounded icon-label">schedule</i>
+              وقت اعتبار الطالب متأخر
+            </label>
+            <div class="time-input-group">
+              <select class="form-select" id="studentLateHour" name="studentLateThresholdHour" required>
+                <% for(let h = 0; h <= 23; h++) { %>
+                  <option value="<%= h %>"><%= h.toString().padStart(2, '0') %></option>
+                <% } %>
+              </select>
+              <span class="time-separator">:</span>
+              <select class="form-select" id="studentLateMinute" name="studentLateThresholdMinute" required>
+                <% for(let m = 0; m <= 59; m += 5) { %>
+                  <option value="<%= m %>"><%= m.toString().padStart(2, '0') %></option>
+                <% } %>
+              </select>
+            </div>
+            <div class="help-text">
+              <i class="material-symbols-rounded" style="font-size: 16px;">info</i>
+              الطلاب الذين يحضرون بعد هذا الوقت سيتم تسجيلهم كمتأخرين
+            </div>
+          </div>
+
+          <!-- Student Check-Out Threshold -->
+          <div class="setting-row">
+            <label class="form-label">
+              <i class="material-symbols-rounded icon-label">logout</i>
+              وقت بداية الانصراف
+            </label>
+            <div class="time-input-group">
+              <select class="form-select" id="studentCheckOutHour" name="studentCheckOutThresholdHour" required>
+                <% for(let h = 0; h <= 23; h++) { %>
+                  <option value="<%= h %>"><%= h.toString().padStart(2, '0') %></option>
+                <% } %>
+              </select>
+              <span class="time-separator">:</span>
+              <select class="form-select" id="studentCheckOutMinute" name="studentCheckOutThresholdMinute" required>
+                <% for(let m = 0; m <= 59; m += 5) { %>
+                  <option value="<%= m %>"><%= m.toString().padStart(2, '0') %></option>
+                <% } %>
+              </select>
+            </div>
+            <div class="help-text">
+              <i class="material-symbols-rounded" style="font-size: 16px;">info</i>
+              المسحات بعد هذا الوقت سيتم اعتبارها انصراف
+            </div>
+          </div>
+        </div>
+
+        <!-- Employee Settings Card -->
+        <div class="settings-card">
+          <div class="settings-header">
+            <h3>
+              <i class="material-symbols-rounded">badge</i>
+              إعدادات حضور الموظفين
+            </h3>
+            <p>تحديد أوقات بداية العمل والتأخير والانصراف للموظفين</p>
+          </div>
+
+          <!-- Employee Work Start Time -->
+          <div class="setting-row">
+            <label class="form-label">
+              <i class="material-symbols-rounded icon-label">work</i>
+              وقت بداية العمل الرسمي
+            </label>
+            <div class="time-input-group">
+              <select class="form-select" id="employeeWorkStartHour" name="employeeWorkStartHour" required>
+                <% for(let h = 0; h <= 23; h++) { %>
+                  <option value="<%= h %>"><%= h.toString().padStart(2, '0') %></option>
+                <% } %>
+              </select>
+              <span class="time-separator">:</span>
+              <select class="form-select" id="employeeWorkStartMinute" name="employeeWorkStartMinute" required>
+                <% for(let m = 0; m <= 59; m += 5) { %>
+                  <option value="<%= m %>"><%= m.toString().padStart(2, '0') %></option>
+                <% } %>
+              </select>
+            </div>
+            <div class="help-text">
+              <i class="material-symbols-rounded" style="font-size: 16px;">info</i>
+              الوقت الرسمي لبداية دوام الموظفين
+            </div>
+          </div>
+
+          <!-- Employee Late Threshold -->
+          <div class="setting-row">
+            <label class="form-label">
+              <i class="material-symbols-rounded icon-label">schedule</i>
+              وقت اعتبار الموظف متأخر
+            </label>
+            <div class="time-input-group">
+              <select class="form-select" id="employeeLateHour" name="employeeLateThresholdHour" required>
+                <% for(let h = 0; h <= 23; h++) { %>
+                  <option value="<%= h %>"><%= h.toString().padStart(2, '0') %></option>
+                <% } %>
+              </select>
+              <span class="time-separator">:</span>
+              <select class="form-select" id="employeeLateMinute" name="employeeLateThresholdMinute" required>
+                <% for(let m = 0; m <= 59; m += 5) { %>
+                  <option value="<%= m %>"><%= m.toString().padStart(2, '0') %></option>
+                <% } %>
+              </select>
+            </div>
+            <div class="help-text">
+              <i class="material-symbols-rounded" style="font-size: 16px;">info</i>
+              الموظفون الذين يحضرون بعد هذا الوقت سيتم تسجيلهم كمتأخرين
+            </div>
+          </div>
+
+          <!-- Employee Check-Out Threshold -->
+          <div class="setting-row">
+            <label class="form-label">
+              <i class="material-symbols-rounded icon-label">logout</i>
+              وقت بداية الانصراف
+            </label>
+            <div class="time-input-group">
+              <select class="form-select" id="employeeCheckOutHour" name="employeeCheckOutThresholdHour" required>
+                <% for(let h = 0; h <= 23; h++) { %>
+                  <option value="<%= h %>"><%= h.toString().padStart(2, '0') %></option>
+                <% } %>
+              </select>
+              <span class="time-separator">:</span>
+              <select class="form-select" id="employeeCheckOutMinute" name="employeeCheckOutThresholdMinute" required>
+                <% for(let m = 0; m <= 59; m += 5) { %>
+                  <option value="<%= m %>"><%= m.toString().padStart(2, '0') %></option>
+                <% } %>
+              </select>
+            </div>
+            <div class="help-text">
+              <i class="material-symbols-rounded" style="font-size: 16px;">info</i>
+              المسحات بعد هذا الوقت سيتم اعتبارها انصراف
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex gap-3 justify-content-end mb-4">
+          <button type="button" class="btn btn-outline-danger" onclick="resetToDefaults()">
+            <i class="material-symbols-rounded me-2" style="font-size: 18px; vertical-align: middle;">restart_alt</i>
+            إعادة تعيين للقيم الافتراضية
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="material-symbols-rounded me-2" style="font-size: 18px; vertical-align: middle;">save</i>
+            حفظ الإعدادات
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <!-- Core JS -->
+  <script src="../assets/js/core/popper.min.js"></script>
+  <script src="../assets/js/core/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <script>
+    // Load current settings on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const response = await axios.get('/admin/attendance-settings-data');
+        const settings = response.data;
+        
+        // Populate form with current settings
+        document.getElementById('studentLateHour').value = settings.studentLateThresholdHour;
+        document.getElementById('studentLateMinute').value = settings.studentLateThresholdMinute;
+        document.getElementById('studentCheckOutHour').value = settings.studentCheckOutThresholdHour;
+        document.getElementById('studentCheckOutMinute').value = settings.studentCheckOutThresholdMinute;
+        
+        document.getElementById('employeeWorkStartHour').value = settings.employeeWorkStartHour;
+        document.getElementById('employeeWorkStartMinute').value = settings.employeeWorkStartMinute;
+        document.getElementById('employeeLateHour').value = settings.employeeLateThresholdHour;
+        document.getElementById('employeeLateMinute').value = settings.employeeLateThresholdMinute;
+        document.getElementById('employeeCheckOutHour').value = settings.employeeCheckOutThresholdHour;
+        document.getElementById('employeeCheckOutMinute').value = settings.employeeCheckOutThresholdMinute;
+      } catch (error) {
+        console.error('Error loading settings:', error);
+        showAlert('error', 'حدث خطأ في تحميل الإعدادات');
+      }
+    });
+
+    // Handle form submission
+    document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(e.target);
+      const settings = {};
+      
+      // Convert form data to object
+      for (let [key, value] of formData.entries()) {
+        settings[key] = parseInt(value);
+      }
+      
+      try {
+        await axios.post('/admin/attendance-settings', settings);
+        showAlert('success', 'تم حفظ الإعدادات بنجاح!');
+        
+        // Show success notification
+        Swal.fire({
+          icon: 'success',
+          title: 'تم الحفظ!',
+          text: 'تم حفظ إعدادات الحضور بنجاح',
+          confirmButtonText: 'حسناً',
+          confirmButtonColor: '#000',
+        });
+      } catch (error) {
+        console.error('Error saving settings:', error);
+        showAlert('error', 'حدث خطأ أثناء حفظ الإعدادات');
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'خطأ!',
+          text: 'حدث خطأ أثناء حفظ الإعدادات',
+          confirmButtonText: 'حسناً',
+          confirmButtonColor: '#dc3545',
+        });
+      }
+    });
+
+    // Reset to defaults
+    async function resetToDefaults() {
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: 'هل أنت متأكد؟',
+        text: 'سيتم إعادة تعيين جميع الإعدادات إلى القيم الافتراضية',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، إعادة تعيين',
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+      });
+      
+      if (result.isConfirmed) {
+        try {
+          await axios.post('/admin/attendance-settings/reset');
+          
+          // Reload page to show default values
+          Swal.fire({
+            icon: 'success',
+            title: 'تم!',
+            text: 'تم إعادة تعيين الإعدادات إلى القيم الافتراضية',
+            confirmButtonText: 'حسناً',
+            confirmButtonColor: '#000',
+          }).then(() => {
+            window.location.reload();
+          });
+        } catch (error) {
+          console.error('Error resetting settings:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'خطأ!',
+            text: 'حدث خطأ أثناء إعادة تعيين الإعدادات',
+            confirmButtonText: 'حسناً',
+            confirmButtonColor: '#dc3545',
+          });
+        }
+      }
+    }
+
+    // Show alert message
+    function showAlert(type, message) {
+      const alertId = type === 'success' ? 'successAlert' : 'errorAlert';
+      const messageId = type === 'success' ? 'successMessage' : 'errorMessage';
+      
+      document.getElementById(messageId).textContent = message;
+      document.getElementById(alertId).style.display = 'flex';
+      
+      // Hide after 5 seconds
+      setTimeout(() => {
+        document.getElementById(alertId).style.display = 'none';
+      }, 5000);
+    }
+  </script>
+</body>
+
+</html>

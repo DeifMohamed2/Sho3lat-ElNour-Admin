@@ -49,29 +49,12 @@
            <span class="nav-link-text me-1 fs-5">الفصول الدراسية</span>
          </a>
        </li>
-      <li class="nav-item">
-        <a class="<%= path=='/admin/student-attendance-log' ? 'nav-link active bg-gradient-dark text-white ':'nav-link text-dark ' %>" href="/admin/student-attendance-log">
-          <i class="material-symbols-rounded opacity-10 fs-4">history</i>
-          <span class="nav-link-text me-1 fs-5">سجل الطالب</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="<%= path=='/admin/employee-attendance-log' ? 'nav-link active bg-gradient-dark text-white ':'nav-link text-dark ' %>" href="/admin/employee-attendance-log">
-          <i class="material-symbols-rounded opacity-10 fs-4">history</i>
-          <span class="nav-link-text me-1 fs-5">سجل الموظف</span>
-        </a>
-      </li>
 
        <!-- Attendance Management Section -->
        <li class="nav-item">
          <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6 fs-5">إدارة الحضور</h6>
        </li>
-       <li class="nav-item">
-         <a class="<%= path=='/admin/attendance' ? 'nav-link active bg-gradient-dark text-white ':'nav-link text-dark ' %>" href="/admin/attendance">
-           <i class="material-symbols-rounded opacity-10 fs-4">how_to_reg</i>
-           <span class="nav-link-text me-1 fs-5">تسجيل الحضور</span>
-         </a>
-       </li>
+  
        <!-- Attendance Dashboards -->
        <li class="nav-item">
          <a class="<%= path=='/admin/student-attendance-dashboard' ? 'nav-link active bg-gradient-dark text-white ':'nav-link text-dark ' %>" href="/admin/student-attendance-dashboard">
@@ -83,6 +66,26 @@
          <a class="<%= path=='/admin/employee-attendance-dashboard' ? 'nav-link active bg-gradient-dark text-white ':'nav-link text-dark ' %>" href="/admin/employee-attendance-dashboard">
            <i class="material-symbols-rounded opacity-10 fs-4">badge</i>
            <span class="nav-link-text me-1 fs-5">حضور الموظفين</span>
+         </a>
+       </li>
+       <!-- Attendance Logs -->
+       <li class="nav-item">
+         <a class="<%= path=='/admin/student-attendance-log' ? 'nav-link active bg-gradient-dark text-white ':'nav-link text-dark ' %>" href="/admin/student-attendance-log">
+           <i class="material-symbols-rounded opacity-10 fs-4">history</i>
+           <span class="nav-link-text me-1 fs-5">سجل حضور الطلاب</span>
+         </a>
+       </li>
+       <li class="nav-item">
+         <a class="<%= path=='/admin/employee-attendance-log' ? 'nav-link active bg-gradient-dark text-white ':'nav-link text-dark ' %>" href="/admin/employee-attendance-log">
+           <i class="material-symbols-rounded opacity-10 fs-4">history</i>
+           <span class="nav-link-text me-1 fs-5">سجل حضور الموظفين</span>
+         </a>
+       </li>
+       <!-- Attendance Settings -->
+       <li class="nav-item">
+         <a class="<%= path=='/admin/attendance-settings' ? 'nav-link active bg-gradient-dark text-white ':'nav-link text-dark ' %>" href="/admin/attendance-settings">
+           <i class="material-symbols-rounded opacity-10 fs-4">settings</i>
+           <span class="nav-link-text me-1 fs-5">إعدادات الحضور</span>
          </a>
        </li>
        <!-- <li class="nav-item">

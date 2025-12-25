@@ -13,6 +13,8 @@ const schedule = require('node-schedule');
 const path = require('path');
 const qrcode = require('qrcode');
 const ExcelJS = require('exceljs');
+const multer = require('multer');
+const fs = require('fs');
 
 // Helper function to get category Arabic names
 const getCategoryArabicNames = () => {
@@ -2049,7 +2051,45 @@ const verifyAdminOtpAndChange = async (req, res) => {
 };
 
 
+
 // ================================= CLASS MANAGEMENT ================================ //
+
+// Multer configuration for schedule image uploads
+const scheduleImageStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../public/uploads/schedules');
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      'schedule-' + uniqueSuffix + path.extname(file.originalname)
+    );
+  },
+});
+
+const uploadScheduleImage = multer({
+  storage: scheduleImageStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(
+      path.extname(file.originalname).toLowerCase()
+    );
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'));
+    }
+  },
+}).single('scheduleImage');
 
 const classes_Get = (req, res) => {
   res.render('Admin/classes', {
@@ -2083,29 +2123,52 @@ const getAllClasses = async (req, res) => {
 };
 
 const addClass = async (req, res) => {
-  try {
-    const { className, academicLevel, section, capacity, notes } = req.body;
-
-    const newClass = new Class({
-      className,
-      academicLevel,
-      section,
-      capacity,
-      notes,
-    });
-
-    await newClass.save();
-    res.json({ message: 'Class added successfully', class: newClass });
-  } catch (error) {
-    console.error('Error adding class:', error);
-    if (error.code === 11000) {
-      res
-        .status(400)
-        .json({ error: 'Class with this level and section already exists' });
-    } else {
-      res.status(500).json({ error: 'Error adding class' });
+  uploadScheduleImage(req, res, async function (err) {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ error: 'File upload error: ' + err.message });
+    } else if (err) {
+      return res.status(400).json({ error: err.message });
     }
-  }
+
+    try {
+      const { className, academicLevel, section, capacity, notes } = req.body;
+
+      const classData = {
+        className,
+        academicLevel,
+        section,
+        capacity,
+        notes,
+      };
+
+      // Add schedule image path if file was uploaded
+      if (req.file) {
+        classData.scheduleImage = '/uploads/schedules/' + req.file.filename;
+      }
+
+      const newClass = new Class(classData);
+
+      await newClass.save();
+      res.json({ message: 'Class added successfully', class: newClass });
+    } catch (error) {
+      // Delete uploaded file if database save fails
+      if (req.file) {
+        const filePath = path.join(__dirname, '../public', req.file.path);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+
+      console.error('Error adding class:', error);
+      if (error.code === 11000) {
+        res
+          .status(400)
+          .json({ error: 'Class with this level and section already exists' });
+      } else {
+        res.status(500).json({ error: 'Error adding class' });
+      }
+    }
+  });
 };
 
 const getClass = async (req, res) => {
@@ -2132,25 +2195,65 @@ const getClass = async (req, res) => {
 };
 
 const updateClass = async (req, res) => {
-  try {
-    const { className, academicLevel, section, capacity, isActive, notes } =
-      req.body;
-
-    const updatedClass = await Class.findByIdAndUpdate(
-      req.params.id,
-      { className, academicLevel, section, capacity, isActive, notes },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedClass) {
-      return res.status(404).json({ error: 'Class not found' });
+  uploadScheduleImage(req, res, async function (err) {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ error: 'File upload error: ' + err.message });
+    } else if (err) {
+      return res.status(400).json({ error: err.message });
     }
 
-    res.json({ message: 'Class updated successfully', class: updatedClass });
-  } catch (error) {
-    console.error('Error updating class:', error);
-    res.status(500).json({ error: 'Error updating class' });
-  }
+    try {
+      const { className, academicLevel, section, capacity, isActive, notes } =
+        req.body;
+
+      const updateData = { className, academicLevel, section, capacity, isActive, notes };
+
+      // If a new image was uploaded, update the path and delete old image
+      if (req.file) {
+        const oldClass = await Class.findById(req.params.id);
+        
+        // Delete old image if it exists
+        if (oldClass && oldClass.scheduleImage) {
+          const oldImagePath = path.join(__dirname, '../public', oldClass.scheduleImage);
+          if (fs.existsSync(oldImagePath)) {
+            fs.unlinkSync(oldImagePath);
+          }
+        }
+
+        updateData.scheduleImage = '/uploads/schedules/' + req.file.filename;
+      }
+
+      const updatedClass = await Class.findByIdAndUpdate(
+        req.params.id,
+        updateData,
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedClass) {
+        // Delete uploaded file if class not found
+        if (req.file) {
+          const filePath = path.join(__dirname, '../public/uploads/schedules/', req.file.filename);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        }
+        return res.status(404).json({ error: 'Class not found' });
+      }
+
+      res.json({ message: 'Class updated successfully', class: updatedClass });
+    } catch (error) {
+      // Delete uploaded file if update fails
+      if (req.file) {
+        const filePath = path.join(__dirname, '../public/uploads/schedules/', req.file.filename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+
+      console.error('Error updating class:', error);
+      res.status(500).json({ error: 'Error updating class' });
+    }
+  });
 };
 
 const deleteClass = async (req, res) => {
@@ -2175,6 +2278,14 @@ const deleteClass = async (req, res) => {
       return res.status(404).json({ error: 'Class not found' });
     }
 
+    // Delete schedule image if it exists
+    if (deletedClass.scheduleImage) {
+      const imagePath = path.join(__dirname, '../public', deletedClass.scheduleImage);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
+
     res.json({
       message: 'Class deleted successfully',
       class: deletedClass,
@@ -2182,6 +2293,37 @@ const deleteClass = async (req, res) => {
   } catch (error) {
     console.error('Error deleting class:', error);
     res.status(500).json({ error: 'Error deleting class' });
+  }
+};
+
+// Delete schedule image for a class
+const deleteScheduleImage = async (req, res) => {
+  try {
+    const classId = req.params.id;
+    const classData = await Class.findById(classId);
+
+    if (!classData) {
+      return res.status(404).json({ error: 'Class not found' });
+    }
+
+    if (!classData.scheduleImage) {
+      return res.status(400).json({ error: 'No schedule image to delete' });
+    }
+
+    // Delete the image file
+    const imagePath = path.join(__dirname, '../public', classData.scheduleImage);
+    if (fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath);
+    }
+
+    // Update the class to remove the image path
+    classData.scheduleImage = '';
+    await classData.save();
+
+    res.json({ message: 'Schedule image deleted successfully', class: classData });
+  } catch (error) {
+    console.error('Error deleting schedule image:', error);
+    res.status(500).json({ error: 'Error deleting schedule image' });
   }
 };
 
@@ -4026,6 +4168,102 @@ const employeeLogByCode_Get = async (req, res) => {
   }
 };
 
+// ==================== ATTENDANCE SETTINGS ====================
+
+const AttendanceSettings = require('../models/AttendanceSettings');
+
+// Render attendance settings page
+const attendanceSettings_Get = async (req, res) => {
+  try {
+    res.render('Admin/attendanceSettings', {
+      title: 'إعدادات الحضور',
+      path: '/admin/attendance-settings',
+    });
+  } catch (error) {
+    console.error('Error rendering attendance settings:', error);
+    res.status(500).send('Error loading attendance settings page');
+  }
+};
+
+// Get attendance settings data (API endpoint)
+const getAttendanceSettingsData = async (req, res) => {
+  try {
+    const settings = await AttendanceSettings.getSettings();
+    res.json(settings);
+  } catch (error) {
+    console.error('Error fetching attendance settings:', error);
+    res.status(500).json({ error: 'Error fetching attendance settings' });
+  }
+};
+
+// Update attendance settings
+const updateAttendanceSettings = async (req, res) => {
+  try {
+    const {
+      studentLateThresholdHour,
+      studentLateThresholdMinute,
+      studentCheckOutThresholdHour,
+      studentCheckOutThresholdMinute,
+      employeeWorkStartHour,
+      employeeWorkStartMinute,
+      employeeLateThresholdHour,
+      employeeLateThresholdMinute,
+      employeeCheckOutThresholdHour,
+      employeeCheckOutThresholdMinute,
+    } = req.body;
+
+    // Validate input
+    const validateTime = (hour, minute, fieldName) => {
+      if (hour < 0 || hour > 23) {
+        throw new Error(`${fieldName} hour must be between 0 and 23`);
+      }
+      if (minute < 0 || minute > 59) {
+        throw new Error(`${fieldName} minute must be between 0 and 59`);
+      }
+    };
+
+    validateTime(studentLateThresholdHour, studentLateThresholdMinute, 'Student late threshold');
+    validateTime(studentCheckOutThresholdHour, studentCheckOutThresholdMinute, 'Student check-out threshold');
+    validateTime(employeeWorkStartHour, employeeWorkStartMinute, 'Employee work start');
+    validateTime(employeeLateThresholdHour, employeeLateThresholdMinute, 'Employee late threshold');
+    validateTime(employeeCheckOutThresholdHour, employeeCheckOutThresholdMinute, 'Employee check-out threshold');
+
+    // Update settings
+    const settings = await AttendanceSettings.updateSettings({
+      studentLateThresholdHour,
+      studentLateThresholdMinute,
+      studentCheckOutThresholdHour,
+      studentCheckOutThresholdMinute,
+      employeeWorkStartHour,
+      employeeWorkStartMinute,
+      employeeLateThresholdHour,
+      employeeLateThresholdMinute,
+      employeeCheckOutThresholdHour,
+      employeeCheckOutThresholdMinute,
+    });
+
+    console.log('✅ Attendance settings updated:', settings);
+    res.json({ success: true, settings });
+  } catch (error) {
+    console.error('Error updating attendance settings:', error);
+    res.status(500).json({ error: error.message || 'Error updating attendance settings' });
+  }
+};
+
+// Reset attendance settings to defaults
+const resetAttendanceSettings = async (req, res) => {
+  try {
+    const settings = await AttendanceSettings.resetToDefaults();
+    console.log('✅ Attendance settings reset to defaults');
+    res.json({ success: true, settings });
+  } catch (error) {
+    console.error('Error resetting attendance settings:', error);
+    res.status(500).json({ error: 'Error resetting attendance settings' });
+  }
+};
+
+// ==================== MODULE EXPORTS ====================
+
 module.exports = {
   dashboard,
   getDashboardData,
@@ -4054,6 +4292,7 @@ module.exports = {
   getClass,
   updateClass,
   deleteClass,
+  deleteScheduleImage,
 
   // Attendance Management
   attendance_Get,
@@ -4096,4 +4335,10 @@ module.exports = {
   employeeLog_Get,
   studentLogByCode_Get,
   employeeLogByCode_Get,
+
+  // Attendance Settings
+  attendanceSettings_Get,
+  getAttendanceSettingsData,
+  updateAttendanceSettings,
+  resetAttendanceSettings,
 };

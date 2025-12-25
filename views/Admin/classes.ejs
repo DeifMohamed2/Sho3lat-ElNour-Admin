@@ -164,6 +164,7 @@
                       <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">الشعبة</th>
                       <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">عدد الطلاب</th>
                       <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">السعة</th>
+                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">الجدول</th>
                       <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">الحالة</th>
                       <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">الإجراءات</th>
                     </tr>
@@ -227,6 +228,20 @@
               <label class="form-label">ملاحظات</label>
               <textarea class="form-control" name="notes" rows="2" placeholder="مثال: فصل صباحي أو احتياجات خاصة"></textarea>
             </div>
+            <div class="mb-3">
+              <label class="form-label">صورة الجدول</label>
+              <input type="file" class="form-control" id="addScheduleImage" name="scheduleImage" accept="image/*">
+              <div class="form-text">اختر صورة الجدول الدراسي للفصل (اختياري)</div>
+              <div id="addImagePreview" class="mt-2" style="display: none;">
+                <img id="addPreviewImg" src="" alt="معاينة" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #ddd;">
+                <button type="button" class="btn btn-sm btn-danger mt-2" id="removeAddPreview">
+                  <i class="material-symbols-rounded text-sm">delete</i> إزالة الصورة
+                </button>
+              </div>
+              <div id="addUploadProgress" class="progress mt-2" style="display: none; height: 20px;">
+                <div id="addProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%">0%</div>
+              </div>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
@@ -287,12 +302,49 @@
               <label class="form-label">ملاحظات</label>
               <textarea class="form-control" id="editNotes" rows="2"></textarea>
             </div>
+            <div class="mb-3">
+              <label class="form-label">صورة الجدول</label>
+              <input type="file" class="form-control" id="editScheduleImage" name="scheduleImage" accept="image/*">
+              <div class="form-text">اختر صورة جديدة لاستبدال الصورة الحالية (اختياري)</div>
+              <div id="editCurrentImage" class="mt-2" style="display: none;">
+                <p class="text-sm mb-1">الصورة الحالية:</p>
+                <img id="editCurrentImg" src="" alt="الصورة الحالية" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #ddd;">
+                <button type="button" class="btn btn-sm btn-danger mt-2" id="deleteCurrentImage">
+                  <i class="material-symbols-rounded text-sm">delete</i> حذف الصورة الحالية
+                </button>
+              </div>
+              <div id="editImagePreview" class="mt-2" style="display: none;">
+                <p class="text-sm mb-1">معاينة الصورة الجديدة:</p>
+                <img id="editPreviewImg" src="" alt="معاينة" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #ddd;">
+                <button type="button" class="btn btn-sm btn-danger mt-2" id="removeEditPreview">
+                  <i class="material-symbols-rounded text-sm">delete</i> إزالة الصورة
+                </button>
+              </div>
+              <div id="editUploadProgress" class="progress mt-2" style="display: none; height: 20px;">
+                <div id="editProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%">0%</div>
+              </div>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
             <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Image Viewer Modal -->
+  <div class="modal fade" id="scheduleImageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">صورة الجدول</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center">
+          <img id="scheduleImageViewer" src="" alt="صورة الجدول" style="max-width: 100%; height: auto; border-radius: 8px;">
+        </div>
       </div>
     </div>
   </div>

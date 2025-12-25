@@ -4,7 +4,25 @@ const Student = require('../models/student');
 const Employee = require('../models/employee');
 const Attendance = require('../models/attendance');
 const EmployeeAttendance = require('../models/employeeAttendance');
+const AttendanceSettings = require('../models/AttendanceSettings');
 const { parseToEgyptTime, getEgyptDayBoundaries, formatEgyptDate } = require('../utils/timezone');
+
+// Settings cache to avoid database queries on every webhook call
+let settingsCache = null;
+let settingsCacheTime = null;
+const CACHE_DURATION = 60000; // 1 minute
+
+// Helper function to get attendance settings (with caching)
+async function getAttendanceSettings() {
+  const now = Date.now();
+  if (settingsCache && settingsCacheTime && (now - settingsCacheTime < CACHE_DURATION)) {
+    return settingsCache;
+  }
+  
+  settingsCache = await AttendanceSettings.getSettings();
+  settingsCacheTime = now;
+  return settingsCache;
+}
 
 /* =======================
    DEVICE PING
@@ -182,11 +200,13 @@ ${status ? `📊 Status: ${status}` : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `);
 
+    // Get attendance settings
+    const settings = await getAttendanceSettings();
+    
     // Get day boundaries in Egypt timezone
     const { start: today } = getEgyptDayBoundaries(scanTime);
     const scanHour = scanTime.getHours(); // Hour in Egypt timezone
     const scanMinute = scanTime.getMinutes(); // Minute in Egypt timezone
-    const isAfter3PM = scanHour >= 15;
 
     // 6️⃣ Try to find Student by studentCode
     // ZKTeco device sends student code as user ID
@@ -196,7 +216,7 @@ ${status ? `📊 Status: ${status}` : ''}
 
     if (student) {
       console.log(`✅ Found Student: ${student.studentName} (Code: ${student.studentCode})`);
-      return handleStudent(student, scanTime, today, isAfter3PM, deviceSN);
+      return handleStudent(student, scanTime, today, settings, deviceSN);
     }
 
     // 7️⃣ Try to find Employee by employeeCode
@@ -219,7 +239,7 @@ ${status ? `📊 Status: ${status}` : ''}
         '17': 'Face Recognition',
       };
       const verifyMethod = verifyMethodMap[verify] || 'Fingerprint';
-      return handleEmployee(employee, scanTime, today, isAfter3PM, deviceSN, verifyMethod);
+      return handleEmployee(employee, scanTime, today, settings, deviceSN, verifyMethod);
     }
 
     // 8️⃣ Not found in either students or employees
@@ -248,34 +268,48 @@ ${status ? `📊 Status: ${status}` : ''}
 /* =======================
    STUDENT LOGIC
 ======================= */
-async function handleStudent(student, scanTime, today, isAfter3PM, deviceSN) {
+async function handleStudent(student, scanTime, today, settings, deviceSN) {
+  const scanHour = scanTime.getHours();
+  const scanMinute = scanTime.getMinutes();
+  
+  // Check if student is late using settings
+  const isLate = settings.isStudentLate(scanHour, scanMinute);
+  
+  // Check if this is check-out time (after check-out threshold)
+  const isCheckOutTime = scanHour > settings.studentCheckOutThresholdHour || 
+    (scanHour === settings.studentCheckOutThresholdHour && scanMinute >= settings.studentCheckOutThresholdMinute);
+  
   let record = await Attendance.findOne({
     student: student._id,
     date: today,
   });
 
   if (!record) {
+    // First scan of the day - mark as check-in
     record = await Attendance.create({
       student: student._id,
       class: student.class?._id,
       date: today,
-      status: isAfter3PM ? 'Late' : 'Present',
+      status: isLate ? 'Late' : 'Present',
       entryTime: scanTime,
       deviceSN,
       isAutomated: true,
     });
-    console.log('✅ Student check-in');
-  } else if (isAfter3PM && !record.exitTime) {
+    console.log(`✅ Student check-in: ${student.studentName}${isLate ? ' (Late)' : ' (Present)'}`);
+  } else if (isCheckOutTime && !record.exitTime) {
+    // Check-out scan
     record.exitTime = scanTime;
     await record.save();
-    console.log('✅ Student check-out');
+    console.log(`✅ Student check-out: ${student.studentName}`);
+  } else {
+    console.log(`ℹ️  Additional scan for student: ${student.studentName}`);
   }
 }
 
 /* =======================
    EMPLOYEE LOGIC
 ======================= */
-async function handleEmployee(employee, scanTime, today, isAfter3PM, deviceSN, verifyMethod = 'Fingerprint') {
+async function handleEmployee(employee, scanTime, today, settings, deviceSN, verifyMethod = 'Fingerprint') {
   let record = await EmployeeAttendance.findOne({
     employee: employee._id,
     date: today,
@@ -284,14 +318,15 @@ async function handleEmployee(employee, scanTime, today, isAfter3PM, deviceSN, v
   const scanHour = scanTime.getHours();
   const scanMinute = scanTime.getMinutes();
   
-  // Determine scan type: Check In (before 3PM) or Check Out (after 3PM)
-  const scanType = isAfter3PM ? 'Check Out' : 'Check In';
+  // Determine if this is check-out time using settings
+  const isCheckOutTime = settings.isCheckOutTime(scanHour, scanMinute);
+  
+  // Determine scan type: Check In or Check Out
+  const scanType = isCheckOutTime ? 'Check Out' : 'Check In';
 
-  // Determine if employee is late (work starts at 8:00 AM, late after 8:15 AM)
-  // Only applies to check-ins before 3PM
-  const workStartHour = 8;
-  const workStartMinute = 15;
-  const isLate = !isAfter3PM && (scanHour > workStartHour || (scanHour === workStartHour && scanMinute > workStartMinute));
+  // Determine if employee is late using settings
+  // Only applies to check-ins before check-out time
+  const isLate = !isCheckOutTime && settings.isEmployeeLate(scanHour, scanMinute);
 
   if (!record) {
     // Create new attendance record (first scan of the day)
@@ -325,7 +360,7 @@ async function handleEmployee(employee, scanTime, today, isAfter3PM, deviceSN, v
     });
 
     // Update check-in/check-out times (only first of each type)
-    if (!isAfter3PM && !record.checkInTime) {
+    if (!isCheckOutTime && !record.checkInTime) {
       // First check-in of the day
       record.checkInTime = scanTime;
       
@@ -334,7 +369,7 @@ async function handleEmployee(employee, scanTime, today, isAfter3PM, deviceSN, v
         record.status = 'Late';
       }
       console.log(`✅ Employee check-in: ${employee.employeeName}${isLate ? ' (Late)' : ' (Present)'}`);
-    } else if (isAfter3PM && !record.checkOutTime && record.checkInTime) {
+    } else if (isCheckOutTime && !record.checkOutTime && record.checkInTime) {
       // First check-out of the day (only if checkInTime exists and times are different)
       // Check if scan time is different from check-in time (at least 1 minute difference)
       const timeDiff = Math.abs(scanTime.getTime() - record.checkInTime.getTime());
