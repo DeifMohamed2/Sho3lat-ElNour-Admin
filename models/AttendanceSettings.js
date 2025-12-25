@@ -7,6 +7,22 @@ const attendanceSettingsSchema = new Schema(
   {
     // ==================== STUDENT SETTINGS ====================
     
+    // Official work start time for students
+    studentWorkStartHour: {
+      type: Number,
+      min: 0,
+      max: 23,
+      default: 8, // 8:00 AM
+      required: true,
+    },
+    studentWorkStartMinute: {
+      type: Number,
+      min: 0,
+      max: 59,
+      default: 0,
+      required: true,
+    },
+    
     // Late threshold - students arriving after this time are marked as "Late"
     studentLateThresholdHour: {
       type: Number,
@@ -100,6 +116,8 @@ attendanceSettingsSchema.statics.getSettings = async function () {
   if (!settings) {
     settings = await this.create({
       // Student defaults
+      studentWorkStartHour: 8,
+      studentWorkStartMinute: 0,
       studentLateThresholdHour: 15,
       studentLateThresholdMinute: 0,
       studentCheckOutThresholdHour: 15,
@@ -138,6 +156,8 @@ attendanceSettingsSchema.statics.updateSettings = async function (updates) {
 attendanceSettingsSchema.statics.resetToDefaults = async function () {
   return this.updateSettings({
     // Student defaults
+    studentWorkStartHour: 8,
+    studentWorkStartMinute: 0,
     studentLateThresholdHour: 15,
     studentLateThresholdMinute: 0,
     studentCheckOutThresholdHour: 15,

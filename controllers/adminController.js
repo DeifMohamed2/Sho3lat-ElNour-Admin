@@ -4200,6 +4200,8 @@ const getAttendanceSettingsData = async (req, res) => {
 const updateAttendanceSettings = async (req, res) => {
   try {
     const {
+      studentWorkStartHour,
+      studentWorkStartMinute,
       studentLateThresholdHour,
       studentLateThresholdMinute,
       studentCheckOutThresholdHour,
@@ -4222,6 +4224,7 @@ const updateAttendanceSettings = async (req, res) => {
       }
     };
 
+    validateTime(studentWorkStartHour, studentWorkStartMinute, 'Student work start');
     validateTime(studentLateThresholdHour, studentLateThresholdMinute, 'Student late threshold');
     validateTime(studentCheckOutThresholdHour, studentCheckOutThresholdMinute, 'Student check-out threshold');
     validateTime(employeeWorkStartHour, employeeWorkStartMinute, 'Employee work start');
@@ -4230,6 +4233,8 @@ const updateAttendanceSettings = async (req, res) => {
 
     // Update settings
     const settings = await AttendanceSettings.updateSettings({
+      studentWorkStartHour,
+      studentWorkStartMinute,
       studentLateThresholdHour,
       studentLateThresholdMinute,
       studentCheckOutThresholdHour,

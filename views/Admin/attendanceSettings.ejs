@@ -260,6 +260,31 @@
             <p>تحديد أوقات الحضور والتأخير والانصراف المبكر للطلاب</p>
           </div>
 
+          <!-- Student Work Start Time -->
+          <div class="setting-row">
+            <label class="form-label">
+              <i class="material-symbols-rounded icon-label">work</i>
+              وقت بداية العمل الرسمي
+            </label>
+            <div class="time-input-group">
+              <select class="form-select" id="studentWorkStartHour" name="studentWorkStartHour" required>
+                <% for(let h = 0; h <= 23; h++) { %>
+                  <option value="<%= h %>"><%= h.toString().padStart(2, '0') %></option>
+                <% } %>
+              </select>
+              <span class="time-separator">:</span>
+              <select class="form-select" id="studentWorkStartMinute" name="studentWorkStartMinute" required>
+                <% for(let m = 0; m <= 59; m += 5) { %>
+                  <option value="<%= m %>"><%= m.toString().padStart(2, '0') %></option>
+                <% } %>
+              </select>
+            </div>
+            <div class="help-text">
+              <i class="material-symbols-rounded" style="font-size: 16px;">info</i>
+              الوقت الرسمي لبداية دوام الطلاب
+            </div>
+          </div>
+
           <!-- Student Late Threshold -->
           <div class="setting-row">
             <label class="form-label">
@@ -426,6 +451,8 @@
         const settings = response.data;
         
         // Populate form with current settings
+        document.getElementById('studentWorkStartHour').value = settings.studentWorkStartHour;
+        document.getElementById('studentWorkStartMinute').value = settings.studentWorkStartMinute;
         document.getElementById('studentLateHour').value = settings.studentLateThresholdHour;
         document.getElementById('studentLateMinute').value = settings.studentLateThresholdMinute;
         document.getElementById('studentCheckOutHour').value = settings.studentCheckOutThresholdHour;
