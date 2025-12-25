@@ -639,20 +639,33 @@
       const status = document.getElementById('filterStatus').value;
       const search = document.getElementById('searchStudent').value;
       
-      // Build query params
-      const params = new URLSearchParams({
+      // First, load ALL attendance data for statistics (no tab filter)
+      const statsParams = new URLSearchParams({ date: date });
+      if (classId) statsParams.append('classId', classId);
+      if (status) statsParams.append('status', status);
+      if (search) statsParams.append('search', search);
+      
+      // Then, load tab-specific data for table display
+      const tableParams = new URLSearchParams({
         date: date,
         tab: currentTab
       });
-      
-      if (classId) params.append('classId', classId);
-      if (status) params.append('status', status);
-      if (search) params.append('search', search);
+      if (classId) tableParams.append('classId', classId);
+      if (status) tableParams.append('status', status);
+      if (search) tableParams.append('search', search);
 
       try {
-        const response = await axios.get(`/admin/student-attendance-dashboard-data?${params.toString()}`);
-        allData = response.data.attendance || [];
-        filteredData = [...allData];
+        // Load all data for accurate statistics
+        const [statsResponse, tableResponse] = await Promise.all([
+          axios.get(`/admin/student-attendance-dashboard-data?${statsParams.toString()}`),
+          axios.get(`/admin/student-attendance-dashboard-data?${tableParams.toString()}`)
+        ]);
+        
+        // Use all data for statistics
+        allData = statsResponse.data.attendance || [];
+        // Use filtered data for table display
+        filteredData = tableResponse.data.attendance || [];
+        
         updateStatistics();
         renderTables();
       } catch (error) {
@@ -661,12 +674,12 @@
       }
     }
 
-    // Update statistics
+    // Update statistics (uses allData for accurate counts)
     function updateStatistics() {
-      const present = filteredData.filter(a => (a.status === 'Present' || a.status === 'Late') && a.entryTime).length;
-      const late = filteredData.filter(a => a.status === 'Late').length;
-      const absent = filteredData.filter(a => a.status === 'Absent').length;
-      const departed = filteredData.filter(a => a.exitTime).length;
+      const present = allData.filter(a => (a.status === 'Present' || a.status === 'Late') && a.entryTime).length;
+      const late = allData.filter(a => a.status === 'Late').length;
+      const absent = allData.filter(a => a.status === 'Absent').length;
+      const departed = allData.filter(a => a.exitTime).length;
 
       document.getElementById('presentCount').textContent = present;
       document.getElementById('lateCount').textContent = late;
