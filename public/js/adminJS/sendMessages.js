@@ -259,17 +259,17 @@ async function loadMessageHistory() {
                 const historyItem = `
                     <div class="history-item">
                         <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h6 class="mb-1">${msg.title}</h6>
-                                <p class="mb-2">${msg.body}</p>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 fw-bold" style="color: #000;">${msg.title}</h6>
+                                <p class="mb-2" style="color: #333;">${msg.body}</p>
                                 <span class="recipients">
-                                    <i class="fas fa-users ms-1"></i>
+                                    <i class="material-symbols-rounded me-1" style="font-size: 18px; vertical-align: middle;">people</i>
                                     ${msg.recipientCount || 0} مستلم
                                 </span>
                             </div>
-                            <div class="text-end">
-                                <span class="badge badge-success">تم الإرسال</span>
-                                <p class="time mb-0 mt-1">${formattedDate}</p>
+                            <div class="text-end ms-3">
+                                <span class="badge-success">تم الإرسال</span>
+                                <p class="time mb-0 mt-2">${formattedDate}</p>
                             </div>
                         </div>
                     </div>
@@ -277,10 +277,20 @@ async function loadMessageHistory() {
                 historyDiv.append(historyItem);
             });
         } else {
-            historyDiv.html('<p class="text-muted text-center">لا توجد رسائل مرسلة بعد</p>');
+            historyDiv.html(`
+                <div class="empty-state">
+                    <i class="material-symbols-rounded">mail</i>
+                    <p>لا توجد رسائل مرسلة بعد</p>
+                </div>
+            `);
         }
     } catch (error) {
         console.error('Error loading message history:', error);
-        $('#messageHistory').html('<p class="text-danger text-center">حدث خطأ في تحميل السجل</p>');
+        $('#messageHistory').html(`
+            <div class="empty-state">
+                <i class="material-symbols-rounded">error</i>
+                <p class="text-danger">حدث خطأ في تحميل السجل</p>
+            </div>
+        `);
     }
 }

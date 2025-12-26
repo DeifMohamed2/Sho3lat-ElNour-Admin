@@ -5,6 +5,7 @@ const Student = require('../models/student');
 const Attendance = require('../models/attendance');
 const AttendanceSettings = require('../models/AttendanceSettings');
 const { getEgyptDate, getEgyptDayBoundaries, formatEgyptDate } = require('../utils/timezone');
+const { sendAttendanceNotification } = require('./fcmService');
 
 /**
  * Mark all students who didn't attend as absent for today
@@ -83,7 +84,23 @@ async function markAbsentStudents() {
     // Bulk insert absent records
     const result = await Attendance.insertMany(absentRecords);
     
+    // Send FCM notifications for all absent students
+    let notificationsSent = 0;
+    let notificationsFailed = 0;
+    
+    for (const record of result) {
+      try {
+        await sendAttendanceNotification(record.student, 'Absent', dayStart);
+        notificationsSent++;
+        console.log(`  📱 Absence notification sent for student ID: ${record.student}`);
+      } catch (notifError) {
+        notificationsFailed++;
+        console.error(`  ⚠️ Error sending absence notification for student ID ${record.student}:`, notifError.message);
+      }
+    }
+    
     console.log(`\n✅ Successfully marked ${result.length} students as absent`);
+    console.log(`📱 Notifications sent: ${notificationsSent}, Failed: ${notificationsFailed}`);
     console.log('===== AUTOMATED ABSENCE MARKING COMPLETED =====\n');
     
     return {

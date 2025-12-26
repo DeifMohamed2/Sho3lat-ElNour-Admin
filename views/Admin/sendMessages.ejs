@@ -1,316 +1,424 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إرسال رسائل للأولياء - <%= title %></title>
-    
-    <!-- Bootstrap RTL -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Select2 for better dropdowns -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.rtl.min.css" rel="stylesheet" />
-    
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .main-container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-        
-        .page-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        
-        .page-header h1 {
-            margin: 0;
-            font-size: 2rem;
-            font-weight: 600;
-        }
-        
-        .page-header p {
-            margin: 0.5rem 0 0 0;
-            opacity: 0.9;
-        }
-        
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            margin-bottom: 2rem;
-        }
-        
-        .card-header {
-            background-color: #fff;
-            border-bottom: 2px solid #f0f0f0;
-            padding: 1.5rem;
-            border-radius: 15px 15px 0 0 !important;
-        }
-        
-        .card-header h5 {
-            margin: 0;
-            color: #333;
-            font-weight: 600;
-        }
-        
-        .card-body {
-            padding: 2rem;
-        }
-        
-        .form-label {
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 0.5rem;
-        }
-        
-        .form-control, .form-select {
-            border-radius: 10px;
-            border: 2px solid #e0e0e0;
-            padding: 0.75rem 1rem;
-            transition: all 0.3s;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        
-        textarea.form-control {
-            min-height: 150px;
-        }
-        
-        .btn-send {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 0.75rem 2rem;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .btn-send:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-            color: white;
-        }
-        
-        .btn-clear {
-            background-color: #6c757d;
-            border: none;
-            color: white;
-            padding: 0.75rem 2rem;
-            border-radius: 10px;
-            font-weight: 600;
-        }
-        
-        .btn-clear:hover {
-            background-color: #5a6268;
-            color: white;
-        }
-        
-        .recipient-option {
-            padding: 1rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .recipient-option:hover {
-            border-color: #667eea;
-            background-color: #f8f9ff;
-        }
-        
-        .recipient-option.active {
-            border-color: #667eea;
-            background-color: #f0f2ff;
-        }
-        
-        .recipient-option input[type="radio"] {
-            margin-left: 0.5rem;
-        }
-        
-        .history-item {
-            padding: 1rem;
-            border-right: 4px solid #667eea;
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-        }
-        
-        .history-item .time {
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-        
-        .history-item .recipients {
-            color: #667eea;
-            font-weight: 600;
-        }
-        
-        .badge-success {
-            background-color: #28a745;
-        }
-        
-        .loading-spinner {
-            display: none;
-        }
-        
-        .loading-spinner.active {
-            display: inline-block;
-        }
-        
-        #studentSearchResults {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .student-checkbox {
-            padding: 0.5rem;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .student-checkbox:last-child {
-            border-bottom: none;
-        }
-    </style>
-</head>
-<body>
-    <%- include('./partials/navbar') %>
-    
-    <div class="main-container">
-        <!-- Page Header -->
-        <div class="page-header">
-            <h1><i class="fas fa-paper-plane ms-2"></i> إرسال رسائل للأولياء</h1>
-            <p>أرسل إشعارات مخصصة لأولياء الأمور عبر تطبيق الهاتف</p>
-        </div>
-        
-        <!-- Message Composition Card -->
-        <div class="card">
-            <div class="card-header">
-                <h5><i class="fas fa-edit ms-2"></i> تكوين الرسالة</h5>
-            </div>
-            <div class="card-body">
-                <form id="messageForm">
+
+<%- include("./partials/head.ejs") %>
+<style>
+  .spinner {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    border: 4.5px solid #0000;
+    border-radius: 50%;
+    border-color: #dbdcef #0000;
+    animation: spinner-e04l1k 1s infinite linear;
+  }
+
+  .spinner::before,
+  .spinner::after {
+    content: "";
+    grid-area: 1/1;
+    margin: 2.2px;
+    border: inherit;
+    border-radius: 50%;
+  }
+
+  .spinner::before {
+    border-color: #ff9847 #0000;
+    animation: inherit;
+    animation-duration: 0.5s;
+    animation-direction: reverse;
+  }
+
+  .spinner::after {
+    margin: 8.9px;
+  }
+
+  .recipient-option {
+    padding: 1.5rem;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #fff;
+  }
+
+  .recipient-option:hover {
+    border-color: rgba(0, 0, 0, 0.4);
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .recipient-option.active {
+    border-color: #000;
+    background-color: #f0f0f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .recipient-option input[type="radio"] {
+    margin-left: 0.5rem;
+    cursor: pointer;
+  }
+
+  .recipient-option label {
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .form-control,
+  .form-select {
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 0 0.15rem rgba(0, 0, 0, 0.1);
+    outline: none;
+  }
+
+  textarea.form-control {
+    min-height: 150px;
+    resize: vertical;
+  }
+
+  .btn-send {
+    background: linear-gradient(120deg, #000 0%, #444 100%);
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .btn-send:hover {
+    background: linear-gradient(120deg, #111 0%, #555 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    color: white;
+  }
+
+  .btn-send:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-clear {
+    background-color: #6c757d;
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .btn-clear:hover {
+    background-color: #5a6268;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .history-item {
+    padding: 1.5rem;
+    border-right: 4px solid #000;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .history-item:hover {
+    background-color: #e9ecef;
+    transform: translateX(-5px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .history-item .time {
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+
+  .history-item .recipients {
+    color: #000;
+    font-weight: 600;
+  }
+
+  .badge-success {
+    background-color: #28a745;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .loading-spinner {
+    display: none;
+  }
+
+  .loading-spinner.active {
+    display: inline-block;
+  }
+
+  #studentSearchResults {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1rem;
+    background-color: #fff;
+  }
+
+  .student-checkbox {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s ease;
+  }
+
+  .student-checkbox:hover {
+    background-color: #f8f9fa;
+  }
+
+  .student-checkbox:last-child {
+    border-bottom: none;
+  }
+
+  .student-checkbox input[type="checkbox"] {
+    margin-left: 0.5rem;
+    cursor: pointer;
+  }
+
+  .student-checkbox label {
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+  }
+
+  .card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+  }
+
+  .card-header {
+    background-color: #fff;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    border-radius: 15px 15px 0 0 !important;
+  }
+
+  .card-header h5 {
+    margin: 0;
+    color: #000;
+    font-weight: 700;
+    font-size: 1.25rem;
+  }
+
+  .card-body {
+    padding: 2rem;
+  }
+
+  @keyframes spinner-e04l1k {
+    100% {
+      transform: rotate(1turn);
+    }
+  }
+
+  /* Enhanced message history section */
+  .message-history-header {
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+    padding: 20px 25px;
+    margin-bottom: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .message-history-header h5 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #000;
+    margin: 0;
+    letter-spacing: 0.5px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+  }
+
+  .empty-state i {
+    font-size: 4rem;
+    color: #ccc;
+    margin-bottom: 20px;
+    display: block;
+  }
+</style>
+
+<body class="g-sidenav-show rtl bg-gray-100">
+  <%- include("./partials/aside.ejs") %>
+
+  <!-- Main content -->
+  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
+    <%- include("./partials/nav.ejs") %>
+
+    <!-- Main Content -->
+    <div class="container-fluid py-2">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="row">
+            <div class="col-md-12 mb-lg-0 mb-4">
+              <!-- Message Composition Card -->
+              <div class="card mt-4">
+                <div class="card-header pb-0 p-3">
+                  <div class="row">
+                    <div class="col-6 d-flex align-items-center">
+                      <h5 class="mb-0">
+                        <i class="material-symbols-rounded me-2" style="font-size: 24px; vertical-align: middle;">send</i>
+                        إرسال رسائل للأولياء
+                      </h5>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body p-3">
+                  <form id="messageForm">
                     <!-- Message Title -->
                     <div class="mb-4">
-                        <label for="messageTitle" class="form-label">
-                            <i class="fas fa-heading ms-1"></i> عنوان الرسالة
-                        </label>
-                        <input type="text" class="form-control" id="messageTitle" 
-                               placeholder="مثال: إعلان هام" required maxlength="100">
-                        <small class="text-muted">الحد الأقصى 100 حرف</small>
+                      <label for="messageTitle" class="form-label">
+                        <i class="material-symbols-rounded me-1" style="font-size: 18px; vertical-align: middle;">title</i>
+                        عنوان الرسالة
+                      </label>
+                      <input type="text" class="form-control border border-2 p-2" id="messageTitle" 
+                             placeholder="مثال: إعلان هام" required maxlength="100">
+                      <small class="text-muted">الحد الأقصى 100 حرف</small>
                     </div>
                     
                     <!-- Message Body -->
                     <div class="mb-4">
-                        <label for="messageBody" class="form-label">
-                            <i class="fas fa-align-right ms-1"></i> نص الرسالة
-                        </label>
-                        <textarea class="form-control" id="messageBody" 
-                                  placeholder="اكتب رسالتك هنا..." required maxlength="500"></textarea>
-                        <small class="text-muted">الحد الأقصى 500 حرف</small>
+                      <label for="messageBody" class="form-label">
+                        <i class="material-symbols-rounded me-1" style="font-size: 18px; vertical-align: middle;">description</i>
+                        نص الرسالة
+                      </label>
+                      <textarea class="form-control border border-2 p-2" id="messageBody" 
+                                placeholder="اكتب رسالتك هنا..." required maxlength="500"></textarea>
+                      <small class="text-muted">الحد الأقصى 500 حرف</small>
                     </div>
                     
                     <!-- Recipient Selection -->
                     <div class="mb-4">
-                        <label class="form-label">
-                            <i class="fas fa-users ms-1"></i> اختيار المستلمين
+                      <label class="form-label">
+                        <i class="material-symbols-rounded me-1" style="font-size: 18px; vertical-align: middle;">people</i>
+                        اختيار المستلمين
+                      </label>
+                      
+                      <!-- All Parents Option -->
+                      <div class="recipient-option" onclick="selectRecipientType('all')">
+                        <input type="radio" name="recipientType" value="all" id="recipientAll">
+                        <label for="recipientAll" class="mb-0">
+                          <strong>جميع أولياء الأمور</strong>
+                          <p class="mb-0 text-muted small mt-2">إرسال الرسالة لجميع أولياء الأمور المسجلين</p>
                         </label>
-                        
-                        <!-- All Parents Option -->
-                        <div class="recipient-option" onclick="selectRecipientType('all')">
-                            <input type="radio" name="recipientType" value="all" id="recipientAll">
-                            <label for="recipientAll" class="mb-0">
-                                <strong>جميع أولياء الأمور</strong>
-                                <p class="mb-0 text-muted small">إرسال الرسالة لجميع أولياء الأمور المسجلين</p>
-                            </label>
-                        </div>
-                        
-                        <!-- By Class Option -->
-                        <div class="recipient-option" onclick="selectRecipientType('class')">
-                            <input type="radio" name="recipientType" value="class" id="recipientClass">
-                            <label for="recipientClass" class="mb-0">
-                                <strong>حسب الفصل</strong>
-                                <p class="mb-0 text-muted small">اختر فصل دراسي معين</p>
-                            </label>
-                        </div>
-                        
-                        <div id="classSelection" class="mt-3" style="display: none;">
-                            <select class="form-select" id="classSelect">
-                                <option value="">اختر الفصل...</option>
-                            </select>
-                        </div>
-                        
-                        <!-- By Student Search Option -->
-                        <div class="recipient-option" onclick="selectRecipientType('search')">
-                            <input type="radio" name="recipientType" value="search" id="recipientSearch">
-                            <label for="recipientSearch" class="mb-0">
-                                <strong>بحث عن طلاب محددين</strong>
-                                <p class="mb-0 text-muted small">ابحث واختر طلاب معينين</p>
-                            </label>
-                        </div>
-                        
-                        <div id="studentSearch" class="mt-3" style="display: none;">
-                            <input type="text" class="form-control mb-2" id="studentSearchInput" 
-                                   placeholder="ابحث بالاسم أو الكود...">
-                            <div id="studentSearchResults"></div>
-                        </div>
+                      </div>
+                      
+                      <!-- By Class Option -->
+                      <div class="recipient-option" onclick="selectRecipientType('class')">
+                        <input type="radio" name="recipientType" value="class" id="recipientClass">
+                        <label for="recipientClass" class="mb-0">
+                          <strong>حسب الفصل</strong>
+                          <p class="mb-0 text-muted small mt-2">اختر فصل دراسي معين</p>
+                        </label>
+                      </div>
+                      
+                      <div id="classSelection" class="mt-3" style="display: none;">
+                        <select class="form-select border border-2 p-2" id="classSelect">
+                          <option value="">اختر الفصل...</option>
+                        </select>
+                      </div>
+                      
+                      <!-- By Student Search Option -->
+                      <div class="recipient-option" onclick="selectRecipientType('search')">
+                        <input type="radio" name="recipientType" value="search" id="recipientSearch">
+                        <label for="recipientSearch" class="mb-0">
+                          <strong>بحث عن طلاب محددين</strong>
+                          <p class="mb-0 text-muted small mt-2">ابحث واختر طلاب معينين</p>
+                        </label>
+                      </div>
+                      
+                      <div id="studentSearch" class="mt-3" style="display: none;">
+                        <input type="text" class="form-control border border-2 p-2 mb-2" id="studentSearchInput" 
+                               placeholder="ابحث بالاسم أو الكود...">
+                        <div id="studentSearchResults"></div>
+                      </div>
                     </div>
                     
                     <!-- Action Buttons -->
                     <div class="d-flex gap-3">
-                        <button type="submit" class="btn btn-send">
-                            <i class="fas fa-paper-plane ms-2"></i>
-                            إرسال الرسالة
-                            <span class="spinner-border spinner-border-sm loading-spinner" role="status"></span>
-                        </button>
-                        <button type="button" class="btn btn-clear" onclick="clearForm()">
-                            <i class="fas fa-eraser ms-2"></i>
-                            مسح
-                        </button>
+                      <button type="submit" class="btn btn-send">
+                        <i class="material-symbols-rounded me-2" style="font-size: 18px; vertical-align: middle;">send</i>
+                        إرسال الرسالة
+                        <span class="spinner-border spinner-border-sm loading-spinner" role="status"></span>
+                      </button>
+                      <button type="button" class="btn btn-clear" onclick="clearForm()">
+                        <i class="material-symbols-rounded me-2" style="font-size: 18px; vertical-align: middle;">clear</i>
+                        مسح
+                      </button>
                     </div>
-                </form>
-            </div>
-        </div>
-        
-        <!-- Message History Card -->
-        <div class="card">
-            <div class="card-header">
-                <h5><i class="fas fa-history ms-2"></i> سجل الرسائل المرسلة</h5>
-            </div>
-            <div class="card-body">
-                <div id="messageHistory">
-                    <p class="text-muted text-center">جاري تحميل السجل...</p>
+                  </form>
                 </div>
+                <div id="spinner" class="spinner mx-auto d-none mb-3"></div>
+              </div>
+              
+              <!-- Message History Card -->
+              <div class="card mt-4">
+                <div class="card-header message-history-header">
+                  <h5 class="mb-0">
+                    <i class="material-symbols-rounded me-2" style="font-size: 24px; vertical-align: middle;">history</i>
+                    سجل الرسائل المرسلة
+                  </h5>
+                </div>
+                <div class="card-body p-3">
+                  <div id="messageHistory">
+                    <div class="empty-state">
+                      <i class="material-symbols-rounded">hourglass_empty</i>
+                      <p>جاري تحميل السجل...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
         </div>
+      </div>
     </div>
-    
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="/js/adminJS/sendMessages.js"></script>
+  </main>
+
+  <!-- Core JS - Load Bootstrap first -->
+  <script src="../assets/js/core/popper.min.js"></script>
+  <script src="../assets/js/core/bootstrap.min.js"></script>
+  <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
+  <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
+  <!-- External Libraries -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Send Messages JS -->
+  <script src="/js/adminJS/sendMessages.js"></script>
 </body>
+
 </html>
