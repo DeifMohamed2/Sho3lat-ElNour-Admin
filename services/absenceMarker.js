@@ -180,8 +180,152 @@ async function rescheduleAbsenceMarking() {
   }
 }
 
+/**
+ * Mark all employees who didn't attend as absent for today
+ * This runs automatically after employee checkout time
+ */
+async function markAbsentEmployees() {
+  const Employee = require('../models/employee');
+  const EmployeeAttendance = require('../models/employeeAttendance');
+  
+  try {
+    console.log('\n🔄 ===== AUTOMATED EMPLOYEE ABSENCE MARKING STARTED =====');
+    console.log(`⏰ Time: ${formatEgyptDate(getEgyptDate())}`);
+    
+    // Get today's date boundaries in Egypt timezone
+    const today = getEgyptDate();
+    const { start: dayStart, end: dayEnd } = getEgyptDayBoundaries(today);
+    
+    console.log(`📅 Processing date: ${formatEgyptDate(dayStart, 'YYYY-MM-DD')}`);
+    
+    // Get all active employees
+    const allEmployees = await Employee.find({ 
+      isActive: { $ne: false }
+    });
+    
+    console.log(`👥 Total active employees: ${allEmployees.length}`);
+    
+    // Get all attendance records for today
+    const todayAttendance = await EmployeeAttendance.find({
+      date: {
+        $gte: dayStart,
+        $lte: dayEnd
+      }
+    }).select('employee');
+    
+    // Create a Set of employee IDs who have attendance records
+    const attendedEmployeeIds = new Set(
+      todayAttendance.map(att => att.employee.toString())
+    );
+    
+    console.log(`✅ Employees with attendance records: ${attendedEmployeeIds.size}`);
+    
+    // Find employees who don't have any attendance record
+    const absentEmployees = allEmployees.filter(
+      employee => !attendedEmployeeIds.has(employee._id.toString())
+    );
+    
+    console.log(`❌ Employees to mark as absent: ${absentEmployees.length}`);
+    
+    if (absentEmployees.length === 0) {
+      console.log('✨ All employees have attendance records. No action needed.');
+      console.log('===== AUTOMATED EMPLOYEE ABSENCE MARKING COMPLETED =====\n');
+      return {
+        success: true,
+        totalEmployees: allEmployees.length,
+        markedAbsent: 0,
+        alreadyRecorded: attendedEmployeeIds.size,
+        message: 'All employees have attendance records'
+      };
+    }
+    
+    // Create absent records for employees who didn't attend
+    const absentRecords = [];
+    for (const employee of absentEmployees) {
+      const record = {
+        employee: employee._id,
+        date: dayStart,
+        status: 'Absent',
+        isAutomated: true,
+        markedAbsentAutomatically: true,
+        createdAt: getEgyptDate()
+      };
+      
+      absentRecords.push(record);
+      
+      console.log(`  📝 Marking absent: ${employee.employeeName} (${employee.employeeCode})`);
+    }
+    
+    // Bulk insert absent records
+    const result = await EmployeeAttendance.insertMany(absentRecords);
+    
+    console.log(`\n✅ Successfully marked ${result.length} employees as absent`);
+    console.log('===== AUTOMATED EMPLOYEE ABSENCE MARKING COMPLETED =====\n');
+    
+    return {
+      success: true,
+      totalEmployees: allEmployees.length,
+      markedAbsent: result.length,
+      alreadyRecorded: attendedEmployeeIds.size,
+      absentEmployees: absentEmployees.map(e => ({
+        name: e.employeeName,
+        code: e.employeeCode
+      }))
+    };
+    
+  } catch (error) {
+    console.error('❌ Error in automated employee absence marking:', error);
+    console.log('===== AUTOMATED EMPLOYEE ABSENCE MARKING FAILED =====\n');
+    
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Get the cron schedule for employee absence marking
+ */
+async function getEmployeeAbsenceMarkingSchedule() {
+  try {
+    const settings = await AttendanceSettings.getSettings();
+    
+    // Get employee checkout time in total minutes
+    const checkoutTimeMinutes = settings.employeeCheckOutThresholdHour * 60 + settings.employeeCheckOutThresholdMinute;
+    
+    // Add the configurable delay (default: 1 minute)
+    const delayMinutes = settings.absenceMarkingDelayMinutes || 1;
+    let scheduledMinutes = checkoutTimeMinutes + delayMinutes;
+    
+    // Handle overflow past midnight
+    if (scheduledMinutes >= 24 * 60) {
+      scheduledMinutes = scheduledMinutes - (24 * 60);
+    }
+    
+    // Convert back to hours and minutes
+    const hour = Math.floor(scheduledMinutes / 60);
+    const minute = scheduledMinutes % 60;
+    
+    // Cron format: minute hour * * *
+    const cronExpression = `${minute} ${hour} * * *`;
+    
+    console.log(`📅 Employee absence marking scheduled for: ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} daily`);
+    console.log(`   (Checkout: ${settings.employeeCheckOutThresholdHour.toString().padStart(2, '0')}:${settings.employeeCheckOutThresholdMinute.toString().padStart(2, '0')} + ${delayMinutes} min delay)`);
+    console.log(`   Cron expression: ${cronExpression}`);
+    
+    return cronExpression;
+  } catch (error) {
+    console.error('Error getting employee absence marking schedule:', error);
+    // Default: Run at 4:00 PM daily
+    return '0 16 * * *';
+  }
+}
+
 module.exports = {
   markAbsentStudents,
+  markAbsentEmployees,
   getAbsenceMarkingSchedule,
+  getEmployeeAbsenceMarkingSchedule,
   rescheduleAbsenceMarking
 };

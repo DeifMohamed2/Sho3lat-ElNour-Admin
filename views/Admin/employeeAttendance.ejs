@@ -106,6 +106,76 @@
       border-color: rgba(0, 0, 0, 0.3);
     }
 
+    /* Professional Row Color Coding */
+    .row-departed {
+      background-color: #d4edda !important;
+      border-right: 4px solid #28a745 !important;
+    }
+
+    .row-departed td {
+      background-color: #d4edda !important;
+    }
+
+    .row-late {
+      background-color: #fff3cd !important;
+      border-right: 4px solid #ffc107 !important;
+    }
+
+    .row-late td {
+      background-color: #fff3cd !important;
+    }
+
+    .row-absent {
+      background-color: #f8d7da !important;
+      border-right: 4px solid #dc3545 !important;
+    }
+
+    .row-absent td {
+      background-color: #f8d7da !important;
+    }
+
+    .row-present {
+      background-color: #fff !important;
+      border-right: 4px solid #0d6efd !important;
+    }
+
+    .row-present td {
+      background-color: #fff !important;
+    }
+
+    /* Departure Status Badge */
+    .departure-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .departure-badge.departed {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: white;
+      box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+
+    .departure-badge.pending {
+      background: #f8f9fa;
+      color: #6c757d;
+      border: 1px dashed rgba(0, 0, 0, 0.3);
+    }
+
+    /* Duration Badge */
+    .duration-badge {
+      background: linear-gradient(135deg, #6c757d, #495057);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 15px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
     #presentTable,
     #absentTable,
     #departedTable {
@@ -413,15 +483,6 @@
         <div class="col-lg-2 col-md-4 col-6 mb-3">
           <div class="stats-card">
             <div class="stats-icon">
-              <i class="material-symbols-rounded">beach_access</i>
-            </div>
-            <div class="stats-number" id="onLeaveCount">0</div>
-            <div class="stats-label">إجازة</div>
-          </div>
-        </div>
-        <div class="col-lg-2 col-md-4 col-6 mb-3">
-          <div class="stats-card">
-            <div class="stats-icon">
               <i class="material-symbols-rounded">access_time</i>
             </div>
             <div class="stats-number" id="totalHours">0</div>
@@ -462,7 +523,6 @@
                 <option value="Present">حاضر</option>
                 <option value="Late">متأخر</option>
                 <option value="Absent">غائب</option>
-                <option value="On-Leave">إجازة</option>
                 <option value="departed">منصرف</option>
               </select>
             </div>
@@ -505,12 +565,6 @@
           <button class="nav-link" id="absent-tab" data-bs-toggle="tab" data-bs-target="#absent" type="button">
             <i class="material-symbols-rounded me-2" style="font-size: 18px; vertical-align: middle;">cancel</i>
             الغياب
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="departed-tab" data-bs-toggle="tab" data-bs-target="#departed" type="button">
-            <i class="material-symbols-rounded me-2" style="font-size: 18px; vertical-align: middle;">logout</i>
-            الانصراف
           </button>
         </li>
       </ul>
@@ -582,40 +636,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Departed Employees -->
-        <div class="tab-pane fade" id="departed" role="tabpanel">
-          <div class="card">
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-hover align-items-center mb-0" id="departedTable">
-                  <thead>
-                    <tr>
-                      <th class="text-center">#</th>
-                      <th>الموظف</th>
-                      <th>الكود</th>
-                      <th>النوع</th>
-                      <th>حضور</th>
-                      <th>انصراف</th>
-                      <th>المسحات</th>
-                      <th>ساعات العمل</th>
-                      <th>الإجراءات</th>
-                    </tr>
-                  </thead>
-                  <tbody id="departedTableBody">
-                    <tr>
-                      <td colspan="9" class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status">
-                          <span class="visually-hidden">جاري التحميل...</span>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </main>
@@ -675,20 +695,33 @@
       const status = document.getElementById('filterStatus').value;
       const search = document.getElementById('searchEmployee').value;
       
-      // Build query params
-      const params = new URLSearchParams({
+      // First, load ALL attendance data for statistics (no tab filter)
+      const statsParams = new URLSearchParams({ date: date });
+      if (employeeType) statsParams.append('employeeType', employeeType);
+      if (status) statsParams.append('status', status);
+      if (search) statsParams.append('search', search);
+      
+      // Then, load tab-specific data for table display
+      const tableParams = new URLSearchParams({
         date: date,
         tab: currentTab
       });
-      
-      if (employeeType) params.append('employeeType', employeeType);
-      if (status) params.append('status', status);
-      if (search) params.append('search', search);
+      if (employeeType) tableParams.append('employeeType', employeeType);
+      if (status) tableParams.append('status', status);
+      if (search) tableParams.append('search', search);
 
       try {
-        const response = await axios.get(`/admin/employee-attendance-dashboard-data?${params.toString()}`);
-        allData = response.data.attendance || [];
-        filteredData = [...allData];
+        // Load all data for accurate statistics
+        const [statsResponse, tableResponse] = await Promise.all([
+          axios.get(`/admin/employee-attendance-dashboard-data?${statsParams.toString()}`),
+          axios.get(`/admin/employee-attendance-dashboard-data?${tableParams.toString()}`)
+        ]);
+        
+        // Use all data for statistics
+        allData = statsResponse.data.attendance || [];
+        // Use filtered data for table display
+        filteredData = tableResponse.data.attendance || [];
+        
         updateStatistics();
         renderTables();
       } catch (error) {
@@ -697,15 +730,14 @@
       }
     }
 
-    // Update statistics
+    // Update statistics (uses allData for accurate counts)
     function updateStatistics() {
-      const present = filteredData.filter(a => a.status === 'Present' && a.checkInTime).length;
-      const late = filteredData.filter(a => a.status === 'Late').length;
-      const absent = filteredData.filter(a => a.status === 'Absent').length;
+      const present = allData.filter(a => (a.status === 'Present' || a.status === 'Late') && a.checkInTime).length;
+      const late = allData.filter(a => a.status === 'Late').length;
+      const absent = allData.filter(a => a.status === 'Absent').length;
       // Only count as departed if they actually checked out (checkOutTime is different from checkInTime)
-      const departed = filteredData.filter(a => a.checkOutTime && hasActuallyCheckedOut(a.checkInTime, a.checkOutTime)).length;
-      const onLeave = filteredData.filter(a => a.status === 'On-Leave').length;
-      const totalHours = filteredData.reduce((sum, a) => {
+      const departed = allData.filter(a => a.checkOutTime && hasActuallyCheckedOut(a.checkInTime, a.checkOutTime)).length;
+      const totalHours = allData.reduce((sum, a) => {
         // Only count hours if they actually checked out
         if (a.checkOutTime && hasActuallyCheckedOut(a.checkInTime, a.checkOutTime)) {
           return sum + (calculateHours(a.checkInTime, a.checkOutTime) || 0);
@@ -717,7 +749,6 @@
       document.getElementById('lateCount').textContent = late;
       document.getElementById('absentCount').textContent = absent;
       document.getElementById('departedCount').textContent = departed;
-      document.getElementById('onLeaveCount').textContent = onLeave;
       document.getElementById('totalHours').textContent = totalHours.toFixed(1) + 'س';
     }
 
@@ -725,13 +756,12 @@
     function renderTables() {
       renderPresentTable();
       renderAbsentTable();
-      renderDepartedTable();
     }
 
-    // Render present employees
+    // Render present employees with color coding
     function renderPresentTable() {
       const tbody = document.getElementById('presentTableBody');
-      // Include records with Present or Late status (checkInTime may be null for edge cases)
+      // Include records with Present or Late status
       const present = filteredData.filter(a => (a.status === 'Present' || a.status === 'Late'));
 
       if (present.length === 0) {
@@ -739,8 +769,23 @@
         return;
       }
 
-      tbody.innerHTML = present.map((att, index) => `
-                <tr id="attendance-row-${att._id}">
+      tbody.innerHTML = present.map((att, index) => {
+        // Determine row class based on status
+        let rowClass = 'row-present';
+        if (att.checkOutTime && hasActuallyCheckedOut(att.checkInTime, att.checkOutTime)) {
+          rowClass = 'row-departed';
+        } else if (att.status === 'Late') {
+          rowClass = 'row-late';
+        }
+        
+        // Calculate duration for departed employees
+        const hours = calculateHours(att.checkInTime, att.checkOutTime);
+        const h = Math.floor(hours);
+        const m = Math.round((hours - h) * 60);
+        const durationText = hasActuallyCheckedOut(att.checkInTime, att.checkOutTime) ? `${h}س ${m}د` : '-';
+        
+        return `
+                <tr id="attendance-row-${att._id}" class="${rowClass}">
                     <td class="text-center">${index + 1}</td>
                     <td>
                         <div class="d-flex align-items-center">
@@ -758,15 +803,17 @@
                     </td>
                     <td>
                         ${att.checkOutTime && hasActuallyCheckedOut(att.checkInTime, att.checkOutTime) ? 
-                            `<i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">logout</i>
-                            ${formatTime(att.checkOutTime)}` : 
-                            '<span class="text-muted">لم ينصرف</span>'}
+                            `<span class="departure-badge departed">
+                                <i class="material-symbols-rounded" style="font-size: 14px;">check_circle</i>
+                                ${formatTime(att.checkOutTime)}
+                            </span>` : 
+                            `<span class="departure-badge pending">
+                                <i class="material-symbols-rounded" style="font-size: 14px;">schedule</i>
+                                في الانتظار
+                            </span>`}
                     </td>
-                    <td>
-                        <span class="badge">${att.scans?.length || 0}</span>
-                        ${renderScans(att.scans)}
-                    </td>
-                    <td><span class="badge">${hasActuallyCheckedOut(att.checkInTime, att.checkOutTime) ? (calculateHours(att.checkInTime, att.checkOutTime)).toFixed(1) + 'س' : '0.0س'}</span></td>
+                    <td><span class="badge">${att.scans?.length || 0}</span></td>
+                    <td><span class="duration-badge">${durationText}</span></td>
                     <td><span class="status-badge status-${att.status.toLowerCase()}">${getStatusText(att.status)}</span></td>
                     <td>
                         <div class="action-buttons">
@@ -779,13 +826,14 @@
                         </div>
                     </td>
                 </tr>
-            `).join('');
+            `;
+      }).join('');
     }
 
     // Render absent employees
     function renderAbsentTable() {
       const tbody = document.getElementById('absentTableBody');
-      const absent = filteredData.filter(a => a.status === 'Absent' || a.status === 'On-Leave');
+      const absent = filteredData.filter(a => a.status === 'Absent');
 
       if (absent.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">لا توجد بيانات</td></tr>';
@@ -819,58 +867,6 @@
                 </tr>
             `).join('');
     }
-
-    // Render departed employees
-    function renderDepartedTable() {
-      const tbody = document.getElementById('departedTableBody');
-      // Only show employees who actually checked out (checkOutTime is different from checkInTime)
-      const departed = filteredData.filter(a => a.checkOutTime && hasActuallyCheckedOut(a.checkInTime, a.checkOutTime));
-
-      if (departed.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5 text-muted">لا توجد بيانات</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = departed.map((att, index) => `
-                <tr id="attendance-row-${att._id}">
-                    <td class="text-center">${index + 1}</td>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <div class="avatar avatar-sm me-2" style="width: 32px; height: 32px; border-radius: 50%; background-color: #f8f9fa; border: 2px solid rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;">
-                                <span style="color: #000; font-weight: 600;">${att.employee?.employeeName?.charAt(0) || 'م'}</span>
-                            </div>
-                            <span class="fw-bold">${att.employee?.employeeName || 'غير معروف'}</span>
-                        </div>
-                    </td>
-                    <td><span class="badge">${att.employee?.employeeCode || 'N/A'}</span></td>
-                    <td><span class="badge">${getEmployeeType(att.employee?.employeeType)}</span></td>
-                    <td>
-                        <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">login</i>
-                        ${att.checkInTime ? formatTime(att.checkInTime) : '---'}
-                    </td>
-                    <td>
-                        <i class="material-symbols-rounded me-1" style="font-size: 16px; vertical-align: middle;">logout</i>
-                        ${att.checkOutTime ? formatTime(att.checkOutTime) : '---'}
-                    </td>
-                    <td>
-                        <span class="badge">${att.scans?.length || 0}</span>
-                        ${renderScans(att.scans)}
-                    </td>
-                    <td><span class="badge">${hasActuallyCheckedOut(att.checkInTime, att.checkOutTime) ? (calculateHours(att.checkInTime, att.checkOutTime)).toFixed(1) + 'س' : '0.0س'}</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-view btn-sm" onclick="viewEmployeeDetails('${att.employee?._id}')" title="عرض التفاصيل">
-                                <i class="material-symbols-rounded">visibility</i>
-                            </button>
-                            <button class="btn-action btn-delete btn-sm" onclick="deleteEmployeeAttendance('${att._id}', '${att.employee?.employeeName || 'هذا السجل'}')" title="حذف السجل">
-                                <i class="material-symbols-rounded">delete</i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-    }
-
     // Render scans
     function renderScans(scans) {
       if (!scans || scans.length === 0) return '';
@@ -1026,16 +1022,12 @@
     // Tab event listeners
     const presentTab = document.getElementById('present-tab');
     const absentTab = document.getElementById('absent-tab');
-    const departedTab = document.getElementById('departed-tab');
 
     if (presentTab) {
       presentTab.addEventListener('shown.bs.tab', () => handleTabChange('present'));
     }
     if (absentTab) {
       absentTab.addEventListener('shown.bs.tab', () => handleTabChange('absent'));
-    }
-    if (departedTab) {
-      departedTab.addEventListener('shown.bs.tab', () => handleTabChange('departed'));
     }
 
     // Debounce function
