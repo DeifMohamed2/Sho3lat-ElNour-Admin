@@ -236,6 +236,11 @@ function renderEmployees(employees) {
             <td class="text-center align-middle">${employmentTypeText}</td>
             <td class="text-center align-middle">${salaryText}</td>
             <td class="text-center align-middle">
+                <span class="badge bg-gradient-info">
+                    ${employee.monthlyHours ? Math.floor(employee.monthlyHours) + 'س ' + Math.round((employee.monthlyHours % 1) * 60) + 'د' : '0س 0د'}
+                </span>
+            </td>
+            <td class="text-center align-middle">
                 <button class="btn btn-sm edit-employee-btn" onclick="editEmployee('${employee._id}')" title="تعديل">
                     <i class="material-symbols-rounded text-sm">edit</i>
                 </button>

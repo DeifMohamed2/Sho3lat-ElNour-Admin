@@ -876,8 +876,51 @@ const addEmployee = async (req, res) => {
 
 const getEmployees = async (req, res) => {
   try {
-    const employees = await Employee.find();
-    res.status(200).json(employees); // Ensure you're sending JSON
+    const employees = await Employee.find().lean();
+    const Attendance = require('../models/employeeAttendance'); // Ensure Attendance model is imported
+    
+    // Get current month start and end dates
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Fetch attendance for all employees for the current month
+    const monthlyAttendance = await Attendance.find({
+      date: { $gte: startOfMonth, $lte: endOfMonth },
+      checkOutTime: { $exists: true, $ne: null }
+    }).select('employee checkInTime checkOutTime');
+
+    // Create a map for quick lookup
+    const hoursMap = {};
+    monthlyAttendance.forEach(record => {
+      if (record.checkInTime && record.checkOutTime) {
+        const checkIn = new Date(record.checkInTime);
+        const checkOut = new Date(record.checkOutTime);
+        
+        // Calculate difference in hours
+        const diffMs = checkOut - checkIn;
+        const diffHours = diffMs / (1000 * 60 * 60);
+        
+        if (diffHours > 0) {
+          if (!hoursMap[record.employee]) {
+            hoursMap[record.employee] = 0;
+          }
+          hoursMap[record.employee] += diffHours;
+        }
+      }
+    });
+
+    // Add monthlyHours to each employee object
+    const employeesWithHours = employees.map(emp => {
+      const totalHours = hoursMap[emp._id] || 0;
+      // Format to 1 decimal place
+      return {
+        ...emp,
+        monthlyHours: parseFloat(totalHours.toFixed(1))
+      };
+    });
+
+    res.status(200).json(employeesWithHours);
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: 'حدث خطأ ما، يرجى المحاولة مرة أخرى.' });
