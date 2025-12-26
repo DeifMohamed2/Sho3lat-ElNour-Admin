@@ -462,4 +462,15 @@ router.post('/attendance-settings/reset', authMiddleware, adminController.resetA
 // Manual trigger for absence marking (for testing/admin control)
 router.post('/trigger-absence-marking', authMiddleware, adminController.triggerAbsenceMarking);
 
+// ==================== CUSTOM MESSAGE SENDING ====================
+
+// Send Messages Page - Main view
+router.get('/send-messages', authMiddleware, adminController.sendMessages_Get);
+
+// Send Custom Message - API endpoint
+router.post('/send-custom-message', authMiddleware, adminController.sendCustomMessage_Post);
+
+// Message History - API endpoint
+router.get('/message-history', authMiddleware, adminController.getMessageHistory);
+
 module.exports = router;

@@ -1,247 +1,219 @@
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 const Student = require('../models/student');
-const Attendance = require('../models/attendance');
-const StudentPayment = require('../models/studentPayment');
 
-// Simple authentication middleware for parent API
-// Parents authenticate using student code
-const parentAuth = async (req, res, next) => {
-  const { studentCode } = req.headers;
+const jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
 
-  if (!studentCode) {
-    return res.status(401).json({ error: 'Student code required' });
-  }
+const {
+  parentLogin,
 
+  getAttendanceHistory,
+  getPaymentHistory,
+  getFinancialSummary,
+  getDashboard,
+  getTodayAttendance,
+  getNotifications,
+  markNotificationRead,
+} = require('../controllers/parentController');
+
+// ================================= MIDDLEWARE ================================ //
+
+/**
+ * Parent Authentication Middleware
+ * Validates JWT token from Authorization header (Bearer token)
+ * Supports student switching: Parents can access data for any of their children
+ * by passing ?studentId=xxx in query params or x-student-id in headers
+ * Attaches student object to req.student
+ */
+const parentAuthMiddleware = async (req, res, next) => {
   try {
-    const student = await Student.findOne({
-      studentCode: studentCode.trim(),
-      isActive: true,
-    });
-
-    if (!student) {
-      return res.status(401).json({ error: 'Invalid student code' });
+    // Get token from Authorization header
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'غير مصرح. يرجى تسجيل الدخول',
+        message_en: 'Unauthorized. Please login',
+      });
     }
 
+    // Extract token
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+
+    // Verify token
+    const decoded = jwt.verify(token, jwtSecret);
+
+    // Store the parent phone from token
+    const parentPhone = decoded.parentPhone;
+
+    // Check if parent wants to switch to a different student
+    // Accept studentId from query params or custom header
+    const requestedStudentId = req.query.studentId || req.headers['x-student-id'];
+
+    let targetStudentId = decoded.studentId; // Default to the student from token
+
+    // If a specific student is requested, verify it belongs to this parent
+    if (requestedStudentId) {
+      const requestedStudent = await Student.findById(requestedStudentId).lean();
+
+      if (!requestedStudent) {
+        return res.status(404).json({
+          success: false,
+          message: 'الطالب المطلوب غير موجود',
+          message_en: 'Requested student not found',
+        });
+      }
+
+      // Verify the requested student belongs to this parent
+      const belongsToParent = 
+        requestedStudent.parentPhone1 === parentPhone || 
+        requestedStudent.parentPhone2 === parentPhone;
+
+      if (!belongsToParent) {
+        return res.status(403).json({
+          success: false,
+          message: 'غير مصرح لك بالوصول إلى بيانات هذا الطالب',
+          message_en: 'You are not authorized to access this student\'s data',
+        });
+      }
+
+      targetStudentId = requestedStudentId;
+    }
+
+    // Get the target student from database
+    const student = await Student.findById(targetStudentId)
+      .populate('class', 'className academicLevel section')
+      .lean();
+
+    if (!student) {
+      return res.status(401).json({
+        success: false,
+        message: 'الطالب غير موجود',
+        message_en: 'Student not found',
+      });
+    }
+
+    // Check if student is active
+    if (!student.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: 'حساب الطالب غير نشط',
+        message_en: 'Student account is inactive',
+      });
+    }
+
+    // Check if student is blocked
+    if (student.isBlocked) {
+      return res.status(403).json({
+        success: false,
+        message: 'حساب الطالب محظور',
+        message_en: 'Student account is blocked',
+        blockReason: student.blockReason,
+      });
+    }
+
+    // Attach student to request
     req.student = student;
+    req.studentId = student._id;
+    req.parentPhone = parentPhone;
+    req.isStudentSwitched = !!requestedStudentId; // Flag to indicate if student was switched
+
     next();
   } catch (error) {
-    console.error('Parent auth error:', error);
-    res.status(500).json({ error: 'Authentication error' });
+    console.error('Parent auth middleware error:', error);
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'رمز غير صالح',
+        message_en: 'Invalid token',
+      });
+    }
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى',
+        message_en: 'Session expired. Please login again',
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: 'خطأ في المصادقة',
+      message_en: 'Authentication error',
+    });
   }
 };
 
-// ================================= PARENT READ-ONLY APIs ================================ //
+// ================================= AUTHENTICATION ================================ //
 
-// Get student profile
-router.get('/student-profile', parentAuth, async (req, res) => {
-  try {
-    const student = await req.student.populate(
-      'class',
-      'className academicLevel section'
-    );
+/**
+ * Parent Login
+ * Authenticate with Parent Phone + Any Student Code
+ * POST /api/parent/login
+ * Body: { phoneNumber, studentCode }
+ * Returns: { success, token, student, students[] }
+ */
+router.post('/login', parentLogin);
 
-    res.json({
-      studentName: student.studentName,
-      studentCode: student.studentCode,
-      class: student.class,
-      parentName: student.parentName,
-      totalSchoolFees: student.totalSchoolFees,
-      totalPaid: student.totalPaid,
-      remainingBalance: student.remainingBalance,
-      isActive: student.isActive,
-    });
-  } catch (error) {
-    console.error('Error fetching profile:', error);
-    res.status(500).json({ error: 'Error fetching profile' });
-  }
-});
 
-// Get attendance history
-router.get('/attendance-history', parentAuth, async (req, res) => {
-  try {
-    const { startDate, endDate, limit = 50 } = req.query;
+/**
+ * Get Dashboard (Combined Data)
+ * GET /api/parent/dashboard
+ * Headers: Authorization: Bearer <token>
+ */
+router.get('/dashboard', parentAuthMiddleware, getDashboard);
 
-    const query = { student: req.student._id };
 
-    if (startDate && endDate) {
-      query.date = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate),
-      };
-    }
+/**
+ * Get Attendance History
+ * GET /api/parent/attendance
+ * Headers: Authorization: Bearer <token>
+ * Query: startDate, endDate, limit
+ */
+router.get('/attendance', parentAuthMiddleware, getAttendanceHistory);
 
-    const attendanceRecords = await Attendance.find(query)
-      .sort({ date: -1 })
-      .limit(parseInt(limit))
-      .select('date status notes')
-      .lean();
+/**
+ * Get Payment History
+ * GET /api/parent/payments
+ * Headers: Authorization: Bearer <token>
+ * Query: limit
+ */
+router.get('/payments', parentAuthMiddleware, getPaymentHistory);
 
-    // Calculate statistics
-    const totalDays = attendanceRecords.length;
-    const presentDays = attendanceRecords.filter(
-      (a) => a.status === 'Present'
-    ).length;
-    const lateDays = attendanceRecords.filter(
-      (a) => a.status === 'Late'
-    ).length;
-    const absentDays = attendanceRecords.filter(
-      (a) => a.status === 'Absent'
-    ).length;
-    const attendancePercentage =
-      totalDays > 0
-        ? (((presentDays + lateDays) / totalDays) * 100).toFixed(1)
-        : 0;
+/**
+ * Get Financial Summary
+ * GET /api/parent/financial-summary
+ * Headers: Authorization: Bearer <token>
+ */
+router.get('/financial-summary', parentAuthMiddleware, getFinancialSummary);
 
-    res.json({
-      records: attendanceRecords,
-      statistics: {
-        totalDays,
-        presentDays,
-        lateDays,
-        absentDays,
-        attendancePercentage,
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching attendance:', error);
-    res.status(500).json({ error: 'Error fetching attendance history' });
-  }
-});
 
-// Get payment history
-router.get('/payment-history', parentAuth, async (req, res) => {
-  try {
-    const { limit = 50 } = req.query;
+// ================================= HOME PAGE APIs ================================ //
 
-    const payments = await StudentPayment.find({
-      student: req.student._id,
-      isReversed: false,
-    })
-      .sort({ paymentDate: -1 })
-      .limit(parseInt(limit))
-      .select('amount paymentDate paymentMethod notes receiptNumber')
-      .lean();
+/**
+ * Get Today's Attendance
+ * GET /api/parent/attendance/today
+ * Headers: Authorization: Bearer <token>
+ */
+router.get('/attendance/today', parentAuthMiddleware, getTodayAttendance);
 
-    res.json({
-      payments,
-      totalPaid: req.student.totalPaid,
-      totalFees: req.student.totalSchoolFees,
-      remainingBalance: req.student.remainingBalance,
-    });
-  } catch (error) {
-    console.error('Error fetching payments:', error);
-    res.status(500).json({ error: 'Error fetching payment history' });
-  }
-});
+/**
+ * Get Notifications
+ * GET /api/parent/notifications
+ * Headers: Authorization: Bearer <token>
+ * Query: limit, page
+ */
+router.get('/notifications', parentAuthMiddleware, getNotifications);
 
-// Get financial summary
-router.get('/financial-summary', parentAuth, async (req, res) => {
-  try {
-    const student = req.student;
-
-    // Get recent payments
-    const recentPayments = await StudentPayment.find({
-      student: student._id,
-      isReversed: false,
-    })
-      .sort({ paymentDate: -1 })
-      .limit(5)
-      .select('amount paymentDate')
-      .lean();
-
-    // Calculate payment progress percentage
-    const paymentProgress =
-      student.totalSchoolFees > 0
-        ? ((student.totalPaid / student.totalSchoolFees) * 100).toFixed(1)
-        : 0;
-
-    res.json({
-      totalSchoolFees: student.totalSchoolFees,
-      totalPaid: student.totalPaid,
-      remainingBalance: student.remainingBalance,
-      paymentProgress: parseFloat(paymentProgress),
-      recentPayments,
-      lastPaymentDate: recentPayments[0]?.paymentDate || null,
-    });
-  } catch (error) {
-    console.error('Error fetching financial summary:', error);
-    res.status(500).json({ error: 'Error fetching financial summary' });
-  }
-});
-
-// Get combined student dashboard
-router.get('/dashboard', parentAuth, async (req, res) => {
-  try {
-    const student = await req.student.populate(
-      'class',
-      'className academicLevel section'
-    );
-
-    // Get today's attendance
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(today);
-    todayEnd.setHours(23, 59, 59, 999);
-
-    const todayAttendance = await Attendance.findOne({
-      student: student._id,
-      date: { $gte: today, $lte: todayEnd },
-    })
-      .select('status')
-      .lean();
-
-    // Get this month's attendance
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-    const monthAttendance = await Attendance.find({
-      student: student._id,
-      date: { $gte: monthStart, $lte: monthEnd },
-    })
-      .select('status')
-      .lean();
-
-    const monthPresent = monthAttendance.filter(
-      (a) => a.status === 'Present' || a.status === 'Late'
-    ).length;
-    const monthTotal = monthAttendance.length;
-    const monthPercentage =
-      monthTotal > 0 ? ((monthPresent / monthTotal) * 100).toFixed(1) : 0;
-
-    // Get recent payments
-    const recentPayments = await StudentPayment.find({
-      student: student._id,
-      isReversed: false,
-    })
-      .sort({ paymentDate: -1 })
-      .limit(3)
-      .select('amount paymentDate')
-      .lean();
-
-    res.json({
-      student: {
-        name: student.studentName,
-        code: student.studentCode,
-        class: student.class,
-      },
-      todayAttendance: todayAttendance?.status || 'Not Marked',
-      monthlyAttendance: {
-        present: monthPresent,
-        total: monthTotal,
-        percentage: parseFloat(monthPercentage),
-      },
-      financial: {
-        totalFees: student.totalSchoolFees,
-        paid: student.totalPaid,
-        remaining: student.remainingBalance,
-      },
-      recentPayments,
-    });
-  } catch (error) {
-    console.error('Error fetching dashboard:', error);
-    res.status(500).json({ error: 'Error fetching dashboard' });
-  }
-});
+/**
+ * Mark Notification as Read
+ * POST /api/parent/notifications/:id/read
+ * Headers: Authorization: Bearer <token>
+ */
+router.post('/notifications/:id/read', parentAuthMiddleware, markNotificationRead);
 
 module.exports = router;

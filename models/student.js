@@ -129,6 +129,19 @@ const studentSchema = new Schema(
       required: false,
     },
 
+    // FCM Tokens for push notifications
+    fcmTokens: {
+      type: [String],
+      default: [],
+      validate: {
+        validator: function(tokens) {
+          // Limit to 5 tokens per student (parent can have max 5 devices)
+          return tokens.length <= 5;
+        },
+        message: 'Maximum 5 FCM tokens allowed per student',
+      },
+    },
+
     // Payment History (stored directly in student)
     payments: [
       {

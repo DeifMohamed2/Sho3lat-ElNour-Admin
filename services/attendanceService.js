@@ -7,6 +7,7 @@ const Attendance = require('../models/attendance');
 const EmployeeAttendance = require('../models/employeeAttendance');
 const DailyClassAttendance = require('../models/dailyClassAttendance');
 const { parseToEgyptTime, getEgyptDayBoundaries } = require('../utils/timezone');
+const { sendAttendanceNotification } = require('./fcmService');
 
 // Utility: Get start and end of day (Egypt timezone)
 function getDayBoundaries(date = null) {
@@ -130,6 +131,19 @@ async function processStudentAttendance(attendanceData) {
     console.log(`   Status: ${attendance.status}`);
     console.log(`   Entry: ${attendance.entryTime}`);
     console.log(`   Exit: ${attendance.exitTime || 'Not yet'}`);
+
+    // Send FCM notification to parent
+    try {
+      await sendAttendanceNotification(
+        student._id,
+        attendance.status,
+        attendance.entryTime || scanTime
+      );
+      console.log(`📱 FCM notification sent for ${student.studentName}`);
+    } catch (notifError) {
+      console.error('⚠️ Error sending FCM notification:', notifError.message);
+      // Don't fail attendance recording if notification fails
+    }
 
     // Update daily class attendance summary
     await updateDailyClassAttendance(student.class._id, dayStart);
@@ -413,6 +427,14 @@ async function markAbsentStudents(date = new Date()) {
 
         await newAttendance.save();
         console.log(`   ❌ Marked ${student.studentName} as absent`);
+        
+        // Send FCM notification for absence
+        try {
+          await sendAttendanceNotification(student._id, 'Absent', dayStart);
+          console.log(`   📱 Absence notification sent for ${student.studentName}`);
+        } catch (notifError) {
+          console.error(`   ⚠️ Error sending absence notification:`, notifError.message);
+        }
       }
 
       // Track classes to update summaries

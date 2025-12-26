@@ -4358,6 +4358,167 @@ const triggerAbsenceMarking = async (req, res) => {
   }
 };
 
+// ==================== CUSTOM MESSAGE SENDING ====================
+
+const { sendCustomMessage, sendNotificationToMultipleParents } = require('../services/fcmService');
+const Notification = require('../models/Notification');
+
+/**
+ * Render Send Messages Page
+ * GET /admin/send-messages
+ */
+const sendMessages_Get = async (req, res) => {
+  try {
+    res.render('Admin/sendMessages', {
+      title: 'إرسال رسائل للأولياء',
+      path: '/admin/send-messages',
+    });
+  } catch (error) {
+    console.error('Error rendering send messages page:', error);
+    res.status(500).send('Error loading page');
+  }
+};
+
+/**
+ * Send Custom Message to Parents
+ * POST /admin/send-custom-message
+ * Body: { title, body, recipientType, classId?, studentIds? }
+ */
+const sendCustomMessage_Post = async (req, res) => {
+  try {
+    const { title, body, recipientType, classId, studentIds } = req.body;
+
+    // Validation
+    if (!title || !body || !recipientType) {
+      return res.status(400).json({
+        success: false,
+        message: 'يرجى ملء جميع الحقول المطلوبة',
+      });
+    }
+
+    let targetStudentIds = [];
+
+    // Determine target students based on recipient type
+    if (recipientType === 'all') {
+      // Get all active students
+      const students = await Student.find({ isActive: true }).select('_id');
+      targetStudentIds = students.map(s => s._id.toString());
+    } else if (recipientType === 'class') {
+      if (!classId) {
+        return res.status(400).json({
+          success: false,
+          message: 'يرجى اختيار الفصل',
+        });
+      }
+      // Get students in specific class
+      const students = await Student.find({ class: classId, isActive: true }).select('_id');
+      targetStudentIds = students.map(s => s._id.toString());
+    } else if (recipientType === 'search') {
+      if (!studentIds || studentIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'يرجى اختيار طالب واحد على الأقل',
+        });
+      }
+      targetStudentIds = studentIds;
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'نوع المستلمين غير صحيح',
+      });
+    }
+
+    if (targetStudentIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'لا توجد طلاب للإرسال إليهم',
+      });
+    }
+
+    // Send notifications
+    const result = await sendNotificationToMultipleParents(
+      targetStudentIds,
+      title,
+      body,
+      { source: 'admin_custom_message' },
+      'message'
+    );
+
+    res.json({
+      success: true,
+      message: 'تم إرسال الرسالة بنجاح',
+      studentsNotified: targetStudentIds.length,
+      totalSuccess: result.totalSuccess,
+      totalFailures: result.totalFailures,
+    });
+
+  } catch (error) {
+    console.error('Error sending custom message:', error);
+    res.status(500).json({
+      success: false,
+      message: 'حدث خطأ أثناء إرسال الرسالة',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Get Message History
+ * GET /admin/message-history
+ */
+const getMessageHistory = async (req, res) => {
+  try {
+    const { limit = 20 } = req.query;
+
+    // Get recent custom messages (type: 'message')
+    const messages = await Notification.aggregate([
+      {
+        $match: { type: 'message' }
+      },
+      {
+        $group: {
+          _id: {
+            title: '$title',
+            body: '$body',
+            date: {
+              $dateToString: {
+                format: '%Y-%m-%d %H:%M',
+                date: '$createdAt'
+              }
+            }
+          },
+          recipientCount: { $sum: 1 },
+          createdAt: { $first: '$createdAt' }
+        }
+      },
+      { $sort: { createdAt: -1 } },
+      { $limit: parseInt(limit) },
+      {
+        $project: {
+          _id: 0,
+          title: '$_id.title',
+          body: '$_id.body',
+          recipientCount: 1,
+          createdAt: 1
+        }
+      }
+    ]);
+
+    res.json({
+      success: true,
+      messages,
+    });
+
+  } catch (error) {
+    console.error('Error fetching message history:', error);
+    res.status(500).json({
+      success: false,
+      message: 'حدث خطأ في تحميل السجل',
+      error: error.message,
+    });
+  }
+};
+
 // ==================== MODULE EXPORTS ====================
 
 module.exports = {
@@ -4440,4 +4601,9 @@ module.exports = {
 
   // Automated Absence Marking
   triggerAbsenceMarking,
+
+  // Custom Message Sending
+  sendMessages_Get,
+  sendCustomMessage_Post,
+  getMessageHistory,
 };
