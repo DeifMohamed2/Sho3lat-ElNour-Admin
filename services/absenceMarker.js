@@ -150,30 +150,56 @@ async function getAbsenceMarkingSchedule() {
 }
 
 /**
- * Reschedule the absence marking job
+ * Reschedule both student and employee absence marking jobs
  * Called when settings are updated
  */
 async function rescheduleAbsenceMarking() {
   try {
     const scheduler = require('../utils/scheduler');
-    const cronExpression = await getAbsenceMarkingSchedule();
     
-    if (scheduler.hasJob('absence-marker')) {
-      scheduler.rescheduleJob('absence-marker', cronExpression);
-      console.log('✅ Absence marking job rescheduled');
+    // ========== RESCHEDULE STUDENT ABSENCE MARKING ==========
+    const studentCronExpression = await getAbsenceMarkingSchedule();
+    
+    if (scheduler.hasJob('student-absence-marker')) {
+      scheduler.rescheduleJob('student-absence-marker', studentCronExpression);
+      console.log('✅ Student absence marking job rescheduled');
     } else {
       // Job doesn't exist, create it
       scheduler.scheduleJob(
-        'absence-marker',
-        cronExpression,
+        'student-absence-marker',
+        studentCronExpression,
         async () => {
-          console.log('\n🔔 Automated absence marking triggered by scheduler');
+          console.log('\n🔔 Automated STUDENT absence marking triggered by scheduler');
           await markAbsentStudents();
         }
       );
+      console.log('✅ Student absence marking job created');
     }
     
-    return { success: true, cronExpression };
+    // ========== RESCHEDULE EMPLOYEE ABSENCE MARKING ==========
+    const employeeCronExpression = await getEmployeeAbsenceMarkingSchedule();
+    
+    if (scheduler.hasJob('employee-absence-marker')) {
+      scheduler.rescheduleJob('employee-absence-marker', employeeCronExpression);
+      console.log('✅ Employee absence marking job rescheduled');
+    } else {
+      // Job doesn't exist, create it
+      scheduler.scheduleJob(
+        'employee-absence-marker',
+        employeeCronExpression,
+        async () => {
+          console.log('\n🔔 Automated EMPLOYEE absence marking triggered by scheduler');
+          await markAbsentEmployees();
+        }
+      );
+      console.log('✅ Employee absence marking job created');
+    }
+    
+    return { 
+      success: true, 
+      studentCronExpression, 
+      employeeCronExpression 
+    };
   } catch (error) {
     console.error('Error rescheduling absence marking:', error);
     return { success: false, error: error.message };

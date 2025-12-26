@@ -4285,18 +4285,26 @@ const resetAttendanceSettings = async (req, res) => {
 
 // ==================== AUTOMATED ABSENCE MARKING ====================
 
-// Manual trigger for absence marking (for testing)
+// Manual trigger for absence marking (for testing) - marks BOTH students and employees
 const triggerAbsenceMarking = async (req, res) => {
   try {
-    const { markAbsentStudents } = require('../services/absenceMarker');
+    const { markAbsentStudents, markAbsentEmployees } = require('../services/absenceMarker');
     
     console.log('\n🔔 Manual absence marking triggered by admin');
-    const result = await markAbsentStudents();
+    
+    // Mark students absent
+    console.log('📚 Marking students absent...');
+    const studentResult = await markAbsentStudents();
+    
+    // Mark employees absent
+    console.log('👔 Marking employees absent...');
+    const employeeResult = await markAbsentEmployees();
     
     res.json({
       success: true,
-      message: 'Absence marking completed',
-      ...result
+      message: 'Absence marking completed for both students and employees',
+      students: studentResult,
+      employees: employeeResult
     });
   } catch (error) {
     console.error('Error in manual absence marking:', error);
