@@ -9,6 +9,7 @@ const mainController = require('../controllers/mainController.js');
 // Define the routes
 
 router.get('/', mainController.homePage);
+router.get('/support', mainController.supportPage);
 
 router.post('/sign-in', mainController.singIn);
 

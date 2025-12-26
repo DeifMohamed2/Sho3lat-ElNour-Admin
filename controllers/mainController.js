@@ -64,8 +64,13 @@ const addAdmin = (req, res) => {
     });
 };
 
+const supportPage = (req, res) => {
+  res.render('support', { title: 'الدعم الفني - نظام شعلة النور' }); // Arabic title
+};
+
 module.exports = {
   homePage,
   addAdmin,
   singIn,
+  supportPage,
 };
